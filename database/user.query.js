@@ -1,37 +1,52 @@
 const db = require("./pool");
 
 exports.findAll = async () => {
-  return db.execute("select * from user").then((data) => {
-    return data[0];
-    console.log(data[0]);
-  });
+  return db
+    .execute(
+      "select id, loginId, userName, email, profileImgUrl, phone, gender, roleType, providerType, gradeId, createdAt, updatedAt from user where isDeleted = false"
+    )
+    .then((data) => {
+      return data[0];
+    });
 };
 
 exports.findById = async (id) => {
   return db
-    .execute("select * from user where id=?", [id])
+    .execute("select * from user where id=? and isDeleted = false", [id])
     .then((data) => data[0][0]);
 };
 
-exports.createUser = async (user) => {
-  const { userName, pwd, email, profileImgUrl, phone, gender, loginId } = user;
+exports.createLocalUser = async (user, pwd) => {
+  const { userName, email, profileImgUrl, phone, gender, loginId, roleType } =
+    user;
   return db
     .execute(
-      "insert into user(userName, pwd, email, profileImgUrl, phone, gender, loginId) values(?,?,?,?,?,?,?)",
-      [userName, pwd, email, profileImgUrl, phone, gender, loginId]
+      "insert into user(userName, pwd, email, profileImgUrl, phone, gender, loginId, roleType) values(?,?,?,?,?,?,?,?)",
+      [userName, pwd, email, profileImgUrl, phone, gender, loginId, roleType]
     )
     .then((data) => {
-      console.log(data[0].insertId);
       return data[0].insertId;
     });
 };
 
-exports.updateUser = async (user) => {
-  const { userName, roleType, profileImgUrl, phone, gradeId } = user;
+exports.createSocialUser = async (userReq) => {
+  const { userName, email, loginId, providerType } = userReq;
   return db
     .execute(
-      "update user set userName=?, roleType=?, profileImgUrl=?, phone=?, gradeId=?",
-      [userName, roleType, profileImgUrl, phone, gradeId]
+      "insert into user(userName, email, loginId, providerType) values(?,?,?,?)",
+      [userName, email, loginId, providerType]
+    )
+    .then((data) => {
+      return data[0].insertId;
+    });
+};
+
+exports.updateUser = async (id, user) => {
+  const { userName, email, profileImgUrl, phone, gender } = user;
+  return db
+    .execute(
+      "update user set userName=?, email=?, profileImgUrl=?, phone=?, gender=? where id=?",
+      [userName, email, profileImgUrl, phone, gender, id]
     )
     .then((data) => {
       return data[0];
@@ -54,8 +69,20 @@ exports.findByEmail = async (email) => {
 
 exports.findByLoginId = async (id) => {
   console.log(id);
-  return db.execute("select * from user where loginId=?", [id]).then((data) => {
-    console.log(data);
-    return data[0][0];
-  });
+  return db
+    .execute("select * from user where loginId=? and isDeleted=false", [id])
+    .then((data) => {
+      return data[0][0];
+    });
+};
+
+exports.findBySocialId = async (id, providerType) => {
+  return db
+    .execute(
+      "select * from user where loginId=? and providerType=? and isDeleted=false",
+      [id, providerType]
+    )
+    .then((data) => {
+      return data[0][0];
+    });
 };

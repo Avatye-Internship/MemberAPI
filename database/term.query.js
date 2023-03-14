@@ -7,19 +7,20 @@ exports.findAll = async () => {
   });
 };
 
-exports.findById = async (id) => {
+exports.findById = async (name) => {
   return db
-    .execute("select * from term where id=?", [id])
-    .then((data) => data[0][0]);
+    .execute("select * from term where termName=?", [name])
+    .then((data) => data[0]);
 };
 
-exports.createTerm = async (user) => {
-  const { userName, pwd, email, profileImgUrl, phone, gender, loginId } = user;
+exports.createUserTerm = async (userterm) => {
+  const { userId, termcode, isAgree } = userterm;
   return db
-    .execute(
-      "insert into user(userName, pwd, email, profileImgUrl, phone, gender, loginId) values(?,?,?,?,?,?,?)",
-      [userName, pwd, email, profileImgUrl, phone, gender, loginId]
-    )
+    .execute("insert into userterm(userId, termcode, isAgree) values(?,?,?)", [
+      userId,
+      termcode,
+      isAgree,
+    ])
     .then((data) => {
       console.log(data[0].insertId);
       return data[0].insertId;

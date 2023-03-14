@@ -22,7 +22,7 @@ app.use(passport.initialize()); // passport 사용
 passportConfig();
 
 // 라우터
-app.use("/api/users", userRouter);
+app.use("/api", userRouter);
 
 app.listen(3000, () => {
   console.log("----server on------");
