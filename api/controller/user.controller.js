@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const passport = require("passport");
+const { BadRequestError } = require("restify-errors");
 
 const ResponseDto = require("../model/ResponseDto.js");
 const termService = require("../service/term.service.js");
@@ -114,7 +115,7 @@ module.exports = {
       }
     } catch (error) {
       console.log(err);
-      return res.status(500).send(err);
+      return res.status(500).json(error.message);
     }
   },
 
@@ -228,6 +229,7 @@ module.exports = {
         .send(new ResponseDto(200, "약관 조회 성공", terms));
     } catch (err) {
       console.log(err);
+      throw new BadRequestError();
       return res.status(500).send(err);
     }
   },
@@ -248,8 +250,15 @@ module.exports = {
       const { name, id } = req.params;
       const isAgree = req.body.isAgree;
 
+      // TODO : isAuthorized
       const userterm = await termService.updateUserTerm(id, name, isAgree);
-      return res.status(200).send(users);
+      return res.status(200).send(
+        new ResponseDto(200, "약관 동의 업데이트 성공", {
+          userId: id,
+          termname: name,
+          isAgree: isAgree,
+        })
+      );
     } catch (err) {
       return res.status(500).send(err);
     }
@@ -289,6 +298,8 @@ module.exports = {
 
   // jwt를 쿠키가 아닌 로컬스토리지에 저장하면 프론트가 로컬스토리지에 있는걸 없애면 되지 않나
   logout: async (req, res) => {},
+
+  getUsersSearch: async (req, res) => {},
 };
 
 const validateReq = (req, res, next) => {

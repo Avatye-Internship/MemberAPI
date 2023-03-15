@@ -25,7 +25,7 @@ module.exports = {
   createUserTerm: async (terms, id) => {
     try {
       for (var name in terms) {
-        const result = await createUserTerm(id, name, terms[name]);
+        await createUserTerm(id, name, terms[name]);
       }
     } catch (error) {
       console.log(error);
@@ -34,7 +34,7 @@ module.exports = {
 
   updateUserTerm: async (id, name, isAgree) => {
     try {
-      const result = await agreeTerm(id, name, isAgree);
+      return await agreeTerm(id, name, isAgree);
     } catch (error) {
       console.log(error);
     }
