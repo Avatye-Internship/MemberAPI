@@ -1,5 +1,6 @@
 const { validationResult } = require("express-validator");
 const passport = require("passport");
+
 const ResponseDto = require("../model/ResponseDto.js");
 const termService = require("../service/term.service.js");
 const userService = require("../service/user.service.js");
@@ -47,17 +48,21 @@ module.exports = {
   // 로컬 회원가입
   signUp: async (req, res) => {
     const userReq = req.body;
+    const termReq = req.body.terms;
 
     const errors = validateReq(req);
     if (errors) {
       return res.status(400).send(new ResponseDto(400, errors, null));
     }
-    // TODO : 유저 있는지 확인 (check id, check pwd)
-    const idExists = await userService.findByLoginId(userReq.loginId);
-    const emailExists = await userService.findLoginIdByEmail(userReq.email);
+
+    const idExists = await userService.checkId(userReq.loginId);
+    const emailExists = await userService.checkEmail(userReq.email);
 
     if (!(idExists && emailExists)) {
+      // 유저 데이터 입력
       const insertId = await userService.createUser(userReq);
+      // 약관 정보 데이터 입력
+      const insertTerm = await termService.createUserTerm(termReq, insertId);
       return res
         .status(201)
         .send(new ResponseDto(201, "회원가입 성공", { id: insertId }));
@@ -200,7 +205,7 @@ module.exports = {
     }
   },
 
-  // 소셜 로그인
+  // 소셜 로그인 (약관 동의 어떻게?)
   socialLogin: async (req, res, next) => {
     try {
       const jwtToken = await userService.generateJWTToken(
@@ -237,17 +242,20 @@ module.exports = {
       return res.status(500).send(err);
     }
   },
-  //-------------------------------------
-  updateTerms: async (req, res, next) => {
+
+  updateUserTerms: async (req, res, next) => {
     try {
-      const users = await userService.getUsers();
+      const { name, id } = req.params;
+      const isAgree = req.body.isAgree;
+
+      const userterm = await termService.updateUserTerm(id, name, isAgree);
       return res.status(200).send(users);
     } catch (err) {
       return res.status(500).send(err);
     }
   },
-
-  updateUserTerms: async (req, res, next) => {
+  //-------------------------------------
+  updateTerms: async (req, res, next) => {
     try {
       const users = await userService.getUsers();
       return res.status(200).send(users);
@@ -278,6 +286,9 @@ module.exports = {
       .status(200)
       .send(new ResponseDto(200, "회원 비밀번호 조회 성공", hashedpwd));
   },
+
+  // jwt를 쿠키가 아닌 로컬스토리지에 저장하면 프론트가 로컬스토리지에 있는걸 없애면 되지 않나
+  logout: async (req, res) => {},
 };
 
 const validateReq = (req, res, next) => {
