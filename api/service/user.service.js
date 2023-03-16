@@ -9,6 +9,9 @@ const {
   createSocialUser,
   createLocalUser,
   deleteUser,
+  updateUserGrade,
+  findGradeById,
+  updateGrade,
 } = require("../../database/user.query");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
@@ -35,6 +38,39 @@ module.exports = {
     }
   },
 
+  // 유저 정보 수정
+  updateUser: async (id, userReq) => {
+    try {
+      const newUser = await updateUser(id, userReq);
+      return newUser;
+    } catch (err) {
+      throw Error(err);
+    }
+  },
+
+  // 유저 등급 수정
+  updateUserGrade: async (id, grade) => {
+    try {
+      const newUser = await updateUserGrade(id, grade);
+      return newUser;
+    } catch (error) {}
+  },
+
+  // 등급 내용 수정
+  updateUserGrade: async (id, grade) => {
+    try {
+      const newGrade = await updateGrade(id, grade);
+      return newGrade;
+    } catch (error) {}
+  },
+
+  getGrade: async (id) => {
+    try {
+      const grade = await findGradeById(id);
+      return grade;
+    } catch (error) {}
+  },
+
   // 유저 저장
   createUser: async (userReq) => {
     try {
@@ -52,6 +88,7 @@ module.exports = {
       throw Error(err);
     }
   },
+
   // login id 있는지 확인
   checkId: async (loginId) => {
     try {
@@ -72,16 +109,6 @@ module.exports = {
     }
   },
 
-  //
-  updateUser: async (id, userReq) => {
-    try {
-      const newUser = await updateUser(id, userReq);
-      return newUser;
-    } catch (err) {
-      throw Error(err);
-    }
-  },
-
   deleteUser: async (id) => {
     try {
       const deleted = await deleteUser(id);
@@ -90,15 +117,6 @@ module.exports = {
       throw Error(err);
     }
   },
-
-  // findLoginIdByEmail: async (email) => {
-  //   try {
-  //     let data = await findByEmail(email);
-  //     return data;
-  //   } catch (err) {
-  //     throw Error(err);
-  //   }
-  // },
 
   findByLoginId: async (loginId, providerType) => {
     try {

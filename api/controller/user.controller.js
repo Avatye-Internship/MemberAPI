@@ -7,74 +7,41 @@ const termService = require("../service/term.service.js");
 const userService = require("../service/user.service.js");
 
 module.exports = {
-  // 유저 목록 조회
-  getUsers: async (req, res, next) => {
-    try {
-      if (req.user.id == null) {
-        return res
-          .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
-      }
-      const users = await userService.getUsers();
-      return res
-        .status(200)
-        .send(new ResponseDto(200, "유저 목록 조회 성공", users));
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send(err);
-    }
-  },
-
-  // 유저 id로 조회
-  getUser: async (req, res, next) => {
-    const { id } = req.params;
-    try {
-      if (req.user.id == null) {
-        return res
-          .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
-      }
-      // 본인이거나 admin이면 조회 가능
-      if (id == req.user.id || req.user.roleType == "roleType") {
-        return res
-          .status(200)
-          .send(new ResponseDto(200, "유저 조회 성공", req.user));
-      }
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send(err);
-    }
-  },
-
   // 로컬 회원가입
   signUp: async (req, res) => {
-    const userReq = req.body;
-    const termReq = req.body.terms;
+    try {
+      const userReq = req.body;
+      const termReq = req.body.terms;
 
-    const errors = validateReq(req);
-    if (errors) {
-      return res.status(400).send(new ResponseDto(400, errors, null));
-    }
+      // 입력 검증
+      const errors = validateReq(req);
+      if (errors) {
+        return res.status(400).send(new ResponseDto(400, errors, null));
+      }
 
-    const idExists = await userService.checkId(userReq.loginId);
-    const emailExists = await userService.checkEmail(userReq.email);
+      // id, email 중복 검사
+      const idExists = await userService.checkId(userReq.loginId);
+      const emailExists = await userService.checkEmail(userReq.email);
 
-    if (!(idExists && emailExists)) {
-      // 유저 데이터 입력
-      const insertId = await userService.createUser(userReq);
-      // 약관 정보 데이터 입력
-      const insertTerm = await termService.createUserTerm(termReq, insertId);
-      return res
-        .status(201)
-        .send(new ResponseDto(201, "회원가입 성공", { id: insertId }));
-    } else if (idExists && emailExists) {
-      return res
-        .status(404)
-        .send(new ResponseDto(409, "아이디, 이메일 중복", null));
-    } else if (idExists) {
-      return res.status(404).send(new ResponseDto(409, "아이디 중복", null));
-    } else if (emailExists) {
-      return res.status(404).send(new ResponseDto(409, "이메일 중복", null));
+      if (!(idExists && emailExists)) {
+        // 유저 데이터 입력
+        const insertId = await userService.createUser(userReq);
+        // 약관 정보 데이터 입력
+        const insertTerm = await termService.createUserTerm(termReq, insertId);
+        return res
+          .status(201)
+          .send(new ResponseDto(201, "회원가입 성공", { id: insertId }));
+      } else if (idExists && emailExists) {
+        return res
+          .status(404)
+          .send(new ResponseDto(409, "아이디, 이메일 중복", null));
+      } else if (idExists) {
+        return res.status(404).send(new ResponseDto(409, "아이디 중복", null));
+      } else if (emailExists) {
+        return res.status(404).send(new ResponseDto(409, "이메일 중복", null));
+      }
+    } catch (error) {
+      return res.status(500).send(error.message);
     }
   },
 
@@ -158,31 +125,31 @@ module.exports = {
     }
   },
 
-  // 유저 정보 수정
-  updateUser: async (req, res, next) => {
-    const { id } = req.params;
-    const userReq = req.body;
-    try {
-      // 본인이거나 admin이면 수정 가능
-      if (req.user.id == null) {
-        return res
-          .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
-      }
+  // // 유저 정보 수정
+  // updateUser: async (req, res, next) => {
+  //   const { id } = req.params;
+  //   const userReq = req.body;
+  //   try {
+  //     // 본인이거나 admin이면 수정 가능
+  //     if (req.user.id == null) {
+  //       return res
+  //         .status(req.user.code)
+  //         .send(new ResponseDto(req.user.code, req.user.msg, null));
+  //     }
 
-      if (id == req.user.id || req.user.roleType == "roleType") {
-        const newUser = await userService.updateUser(id, userReq);
-        return res
-          .status(200)
-          .send(new ResponseDto(200, "회원 정보 수정 성공", id));
-      } else {
-        return res.status(403).send(new ResponseDto(403, "접근 권한 없음", id));
-      }
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send({ err });
-    }
-  },
+  //     if (id == req.user.id || req.user.roleType == "roleType") {
+  //       const newUser = await userService.updateUser(id, userReq);
+  //       return res
+  //         .status(200)
+  //         .send(new ResponseDto(200, "회원 정보 수정 성공", id));
+  //     } else {
+  //       return res.status(403).send(new ResponseDto(403, "접근 권한 없음", id));
+  //     }
+  //   } catch (err) {
+  //     console.log(err);
+  //     return res.status(500).send({ err });
+  //   }
+  // },
 
   // 회원 탈퇴
   deleteUser: async (req, res) => {
@@ -221,30 +188,6 @@ module.exports = {
     }
   },
 
-  getTerms: async (req, res, next) => {
-    try {
-      const terms = await termService.getTerms();
-      return res
-        .status(200)
-        .send(new ResponseDto(200, "약관 조회 성공", terms));
-    } catch (err) {
-      console.log(err);
-      throw new BadRequestError();
-      return res.status(500).send(err);
-    }
-  },
-
-  getTerm: async (req, res, next) => {
-    try {
-      const { name } = req.params;
-      const term = await termService.getTerm(name);
-      return res.status(200).send(new ResponseDto(200, "약관 조회 성공", term));
-    } catch (err) {
-      console.log(err);
-      return res.status(500).send(err);
-    }
-  },
-
   updateUserTerms: async (req, res, next) => {
     try {
       const { name, id } = req.params;
@@ -259,15 +202,6 @@ module.exports = {
           isAgree: isAgree,
         })
       );
-    } catch (err) {
-      return res.status(500).send(err);
-    }
-  },
-  //-------------------------------------
-  updateTerms: async (req, res, next) => {
-    try {
-      const users = await userService.getUsers();
-      return res.status(200).send(users);
     } catch (err) {
       return res.status(500).send(err);
     }
@@ -302,7 +236,7 @@ module.exports = {
   getUsersSearch: async (req, res) => {},
 };
 
-const validateReq = (req, res, next) => {
+exports.validateReq = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
     return errors.errors;

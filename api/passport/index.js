@@ -72,6 +72,7 @@ const AdminJWTVerify = async (payload, done) => {
     const user = await findById(payload.id);
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
+      // 관리자만 접근 가능
       if (user.roleType == "ADMIN") {
         return done(null, user);
       } else {
@@ -81,15 +82,15 @@ const AdminJWTVerify = async (payload, done) => {
         });
       }
     } else {
+      // 유저 데이터가 없는 경우
       return done(null, {
         code: 401,
         msg: "인증되지 않은 회원",
       });
     }
-    // 유저 데이터가 없다면 에러 표시
   } catch (error) {
     console.error(error);
-    return done(error);
+    return done(null, error);
   }
 };
 

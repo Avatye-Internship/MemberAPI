@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("./database/pool.js");
-const userRouter = require("./api/routes/user.router.js");
+const router = require("./api/routes/router.js");
 const bodyParser = require("body-parser");
 // jwt토큰 발급해서 쿠키에 넣어주기 위함
 const cookieParser = require("cookie-parser");
@@ -24,7 +24,7 @@ app.use(passport.initialize()); // passport 사용
 passportConfig();
 
 // 라우터
-app.use("/api", userRouter);
+app.use("/api", router);
 
 app.listen(3000, () => {
   console.log("----server on------");

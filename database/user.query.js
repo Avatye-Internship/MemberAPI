@@ -1,6 +1,8 @@
 const db = require("./pool");
 
 exports.findAll = async () => {
+  // let query = "select * from user"
+
   return db
     .execute(
       "select id, loginId, userName, email, profileImgUrl, phone, gender, roleType, providerType, gradeId, createdAt, updatedAt from user where isDeleted = false"
@@ -42,15 +44,43 @@ exports.createSocialUser = async (userReq) => {
 };
 
 exports.updateUser = async (id, user) => {
-  const { userName, email, profileImgUrl, phone, gender } = user;
+  const { userName, email, profileImgUrl, phone, gender, roleType } = user;
   return db
     .execute(
-      "update user set userName=?, email=?, profileImgUrl=?, phone=?, gender=? where id=?",
-      [userName, email, profileImgUrl, phone, gender, id]
+      "update user set userName=?, email=?, profileImgUrl=?, phone=?, gender=? roleType=? where id=?",
+      [userName, email, profileImgUrl, phone, gender, roleType, id]
     )
     .then((data) => {
       return data[0];
     });
+};
+
+exports.updateUserGrade = async (id, grade) => {
+  return db
+    .execute("update user set gradeId=? where id=?", [grade, id])
+    .then((data) => {
+      return data[0];
+    });
+};
+
+exports.updateGrade = async (id, grade) => {
+  const { gradeName, dcRate, dcPrice } = grade;
+  return db
+    .execute("update grade set gradeName=?, dcRate=?, dcPrice=? where id=?", [
+      gradeName,
+      dcRate,
+      dcPrice,
+      id,
+    ])
+    .then((data) => {
+      return data[0];
+    });
+};
+
+exports.findGradeById = async (id, grade) => {
+  return db.execute("select * from grade where id=?", [id]).then((data) => {
+    return data[0][0];
+  });
 };
 
 exports.deleteUser = async (id) => {
