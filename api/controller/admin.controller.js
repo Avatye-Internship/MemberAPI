@@ -22,7 +22,7 @@ module.exports = {
       if (req.user.id == null) {
         return res
           .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
+          .send(new ResponseDto(req.user.code, req.user.msg));
       }
       const users = await userService.getUsers();
       return res
@@ -69,13 +69,13 @@ module.exports = {
       if (req.user.id == null) {
         return res
           .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
+          .send(new ResponseDto(req.user.code, req.user.msg));
       }
 
       // 입력 검증
       const errors = validateReq(req);
       if (errors) {
-        return res.status(400).send(new ResponseDto(400, errors, null));
+        return res.status(400).send(new ResponseDto(400, errors));
       }
 
       // 회원 id 존재하는지 검사
@@ -83,7 +83,7 @@ module.exports = {
       if (!userExist) {
         return res
           .status(404)
-          .send(new ResponseDto(404, "해당 회원 id가 존재하지 않습니다", null));
+          .send(new ResponseDto(404, "해당 회원 id가 존재하지 않습니다"));
       }
       const newUser = await userService.updateUser(id, userReq);
       return res
@@ -104,13 +104,13 @@ module.exports = {
       if (req.user.id == null) {
         return res
           .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
+          .send(new ResponseDto(req.user.code, req.user.msg));
       }
 
       // 입력 검증
       const errors = validateReq(req);
       if (errors) {
-        return res.status(400).send(new ResponseDto(400, errors, null));
+        return res.status(400).send(new ResponseDto(400, errors));
       }
 
       // 유저 id, 등급 id 존재하는지 확인
@@ -138,13 +138,11 @@ module.exports = {
       } else if (userExist) {
         return res
           .status(404)
-          .send(
-            new ResponseDto(404, "해당 회원 id가 존재하지 않습니다. ", null)
-          );
+          .send(new ResponseDto(404, "해당 회원 id가 존재하지 않습니다. "));
       } else if (gradeExist) {
         return res
           .status(404)
-          .send(new ResponseDto(404, "해당 등급 id가 존재하지 않습니다", null));
+          .send(new ResponseDto(404, "해당 등급 id가 존재하지 않습니다"));
       }
     } catch (error) {
       console.log(error);
@@ -162,13 +160,13 @@ module.exports = {
       if (req.user.id == null) {
         return res
           .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg, null));
+          .send(new ResponseDto(req.user.code, req.user.msg));
       }
 
       // 입력 검증
       const errors = validateReq(req);
       if (errors) {
-        return res.status(400).send(new ResponseDto(400, errors, null));
+        return res.status(400).send(new ResponseDto(400, errors));
       }
 
       // 등급 id 존재하는지 확인
@@ -176,7 +174,7 @@ module.exports = {
       if (!gradeExist) {
         return res
           .status(404)
-          .send(new ResponseDto(404, "해당 등급 id가 존재하지 않습니다", null));
+          .send(new ResponseDto(404, "해당 등급 id가 존재하지 않습니다"));
       }
 
       const newGrade = await userService.updateGrade(id, grade);

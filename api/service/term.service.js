@@ -3,6 +3,7 @@ const {
   findById,
   createUserTerm,
   agreeTerm,
+  createTerm,
 } = require("../../database/term.query");
 
 module.exports = {
@@ -19,6 +20,13 @@ module.exports = {
     try {
       const term = await findById(name);
       return term;
+    } catch (error) {}
+  },
+
+  createTerm: async (term) => {
+    try {
+      const newterm = await createTerm(term);
+      return newterm;
     } catch (error) {}
   },
 

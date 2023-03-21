@@ -77,6 +77,14 @@ exports.updateGrade = async (id, grade) => {
     });
 };
 
+exports.updatePwd = async (id, pwd) => {
+  return db
+    .execute("update user set pwd=? where id=?", [pwd, id])
+    .then((data) => {
+      return data[0];
+    });
+};
+
 exports.findGradeById = async (id, grade) => {
   return db.execute("select * from grade where id=?", [id]).then((data) => {
     return data[0][0];

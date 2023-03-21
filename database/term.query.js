@@ -9,13 +9,25 @@ exports.findAll = async () => {
 
 exports.findById = async (name) => {
   return db
-    .execute("select * from term where termname=?", [name])
+    .execute("select * from term where termName=?", [name])
     .then((data) => data[0]);
+};
+
+exports.createTerm = async (term) => {
+  const { termName, termContent, isRequired } = term;
+  return db
+    .execute(
+      "insert into term(termName, termContent, isRequired) values(?,?,?)",
+      [termName, termContent, isRequired]
+    )
+    .then((data) => {
+      return data[0].insertId;
+    });
 };
 
 exports.createUserTerm = async (id, termName, isAgree) => {
   return db
-    .execute("insert into userterm(userId, termname, isAgree) values(?,?,?)", [
+    .execute("insert into userterm(userId, termName, isAgree) values(?,?,?)", [
       id,
       termName,
       isAgree,
@@ -28,7 +40,7 @@ exports.createUserTerm = async (id, termName, isAgree) => {
 
 exports.agreeTerm = async (id, name, isAgree) => {
   return db
-    .execute("update userterm set isAgree=? where userId=? and termname=?", [
+    .execute("update userterm set isAgree=? where userId=? and termName=?", [
       isAgree,
       id,
       name,

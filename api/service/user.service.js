@@ -12,6 +12,7 @@ const {
   updateUserGrade,
   findGradeById,
   updateGrade,
+  updatePwd,
 } = require("../../database/user.query");
 const bcrypt = require("bcrypt");
 require("dotenv").config();
@@ -109,6 +110,7 @@ module.exports = {
     }
   },
 
+  // 유저 삭제
   deleteUser: async (id) => {
     try {
       const deleted = await deleteUser(id);
@@ -118,6 +120,18 @@ module.exports = {
     }
   },
 
+  // 비밀번호 변경
+  updatePwd: async (id, pwd) => {
+    try {
+      const hashed = await bcrypt.hash(pwd, 10);
+      const updated = await updatePwd(id, hashed);
+      return updated;
+    } catch (err) {
+      throw Error(err);
+    }
+  },
+
+  // 로그인 아이디로 찾기
   findByLoginId: async (loginId, providerType) => {
     try {
       let data;
@@ -132,6 +146,7 @@ module.exports = {
     }
   },
 
+  // 토큰 만들기
   generateJWTToken: async (id, roleType) => {
     const token = jwt.sign({ id, roleType }, process.env.JWT_SECRET, {
       expiresIn: "3d",

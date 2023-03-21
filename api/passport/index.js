@@ -14,6 +14,7 @@ const { findById } = require("../../database/user.query");
 const { UnauthorizedError } = require("restify-errors");
 require("dotenv").config();
 
+// 로그인
 const passportConfig = {
   usernameField: "loginId",
   passwordField: "pwd",
@@ -41,10 +42,11 @@ const passportVerify = async (username, password, done) => {
     }
   } catch (error) {
     console.error(error);
-    return done(error);
+    return done(null, { code: 401, msg: error.message });
   }
 };
 
+// 유저
 const JWTConfig = {
   jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(), // request에서 header의 authorization에서 정보를 가져온다
   secretOrKey: process.env.JWT_SECRET, // 암호 키 입력
@@ -62,7 +64,7 @@ const UserJWTVerify = async (payload, done) => {
     return done(null, { code: 401, msg: "인증되지 않은 회원" });
   } catch (error) {
     console.error(error);
-    return done(error);
+    return done(null, { code: 401, msg: error.message });
   }
 };
 
@@ -90,41 +92,46 @@ const AdminJWTVerify = async (payload, done) => {
     }
   } catch (error) {
     console.error(error);
-    return done(null, error);
+    return done(null, { code: 401, msg: error.message });
   }
 };
 
+// 카카오
 const KakaoConfig = {
   clientID: "7d5afad9f86197e00f3cbfb1c227e14c",
   callbackURL: process.env.KAKAO_CALLBACK_URL,
 };
 
 const KakaoVerify = async (accessToken, refreshToken, profile, done) => {
-  const profileJson = profile._json;
-  const kakao_account = profileJson.kakao_account;
-  // 가입 이력 조사
-  const exUser = await findByLoginId(profileJson.id, "KAKAO");
+  try {
+    const profileJson = profile._json;
+    const kakao_account = profileJson.kakao_account;
+    // 가입 이력 조사
+    const exUser = await findByLoginId(profileJson.id, "KAKAO");
 
-  // 이미 있는 회원
-  if (exUser) {
-    done(null, exUser);
-  } else {
-    // 새로 가입
-    const newUser = await createUser({
-      email:
-        kakao_account.has_email && !kakao_account.email_needs_agreement
-          ? kakao_account.email
-          : null,
-      userName: kakao_account.profile.nickname,
-      loginId: profileJson.id,
-      providerType: "KAKAO",
-    });
-    done(null, newUser);
+    // 이미 있는 회원
+    if (exUser) {
+      done(null, exUser);
+    } else {
+      // 새로 가입
+      const newUser = await createUser({
+        email:
+          kakao_account.has_email && !kakao_account.email_needs_agreement
+            ? kakao_account.email
+            : null,
+        userName: kakao_account.profile.nickname,
+        loginId: profileJson.id,
+        providerType: "KAKAO",
+      });
+      done(null, newUser);
+    }
+  } catch (error) {
+    console.error(error);
+    return done(null, { code: 401, msg: error.message });
   }
 };
 
 module.exports = () => {
-  // 로컬
   passport.use("local", new LocalStrategy(passportConfig, passportVerify));
   passport.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
   passport.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
