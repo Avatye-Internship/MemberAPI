@@ -1,32 +1,33 @@
 const passport = require("passport");
 const JWTStrategy = require("passport-jwt").Strategy;
-const {
-  getUser,
-  findByLoginId,
-  createUser,
-} = require("../service/user.service");
 const LocalStrategy = require("passport-local").Strategy;
 const KakaoStrategy = require("passport-kakao").Strategy;
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const { ExtractJwt } = require("passport-jwt");
-const { findById } = require("../../database/user.query");
+const {
+  findById,
+  findLocalById,
+  findByEmail,
+  findBySocialId,
+  createSocialUser,
+} = require("../../database/user.query");
 const { UnauthorizedError } = require("restify-errors");
 require("dotenv").config();
 
 // 로그인
 const passportConfig = {
-  usernameField: "loginId",
+  usernameField: "email",
   passwordField: "pwd",
 };
 
 const passportVerify = async (username, password, done) => {
   try {
-    const loginId = username;
+    const email = username;
     const pwd = password;
 
-    const user = await findByLoginId(loginId);
-    // 해당 아이디가 없다면 에러
+    const user = await findByEmail(email);
+    // 해당 이메일가 없다면 에러
     if (!user) {
       return done(null, { code: 404, msg: "존재하지 않는 아이디" });
     }
@@ -55,7 +56,7 @@ const JWTConfig = {
 const UserJWTVerify = async (payload, done) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await findById(payload.id);
+    const user = await findLocalById(payload.id);
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       return done(null, user);
@@ -71,11 +72,11 @@ const UserJWTVerify = async (payload, done) => {
 const AdminJWTVerify = async (payload, done) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await findById(payload.id);
+    const user = await findLocalById(payload.id);
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       // 관리자만 접근 가능
-      if (user.roleType == "ADMIN") {
+      if (user.role == "ADMIN") {
         return done(null, user);
       } else {
         return done(null, {
@@ -107,21 +108,17 @@ const KakaoVerify = async (accessToken, refreshToken, profile, done) => {
     const profileJson = profile._json;
     const kakao_account = profileJson.kakao_account;
     // 가입 이력 조사
-    const exUser = await findByLoginId(profileJson.id, "KAKAO");
+    const exUser = await findBySocialId(profileJson.id, "KAKAO");
 
     // 이미 있는 회원
     if (exUser) {
       done(null, exUser);
     } else {
       // 새로 가입
-      const newUser = await createUser({
-        email:
-          kakao_account.has_email && !kakao_account.email_needs_agreement
-            ? kakao_account.email
-            : null,
-        userName: kakao_account.profile.nickname,
-        loginId: profileJson.id,
-        providerType: "KAKAO",
+      const newSocial = await createSocialUser({
+        nickname: kakao_account.profile.nickname,
+        sns_id: profileJson.id,
+        provider: "KAKAO",
       });
       done(null, newUser);
     }

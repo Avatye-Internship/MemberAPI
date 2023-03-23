@@ -77,19 +77,20 @@ const requireKakao = passport.authenticate("kakao", { session: false });
   관리자 API
 */
 // 전체 회원 조회 admin
-router.get("/admin/users", requireAdminAuth, adminController.getUsers);
+// router.get("/admin/users", requireAdminAuth, adminController.getUsers);
+router.get("/admin/users", adminController.getUsers);
 // 회원 필터링 조회
 // router.get("/users/filter", userController.getUsersfilter);
 
 // 회원 id로 조회
-router.get("/admin/users/:id", requireAdminAuth, adminController.getUser);
+// router.get("/admin/users/:id", requireAdminAuth, adminController.getUser);
+router.get("/admin/users/account/:id", adminController.getUserAccount);
+
+// 회원 정보 상세 조회
+router.get("admin/users/info/:id", adminController.getUserInfo);
+
 // 회원 정보 수정
-router.put(
-  "/admin/users/:id",
-  requireAdminAuth,
-  [userName, email],
-  adminController.updateUser
-);
+router.put("/admin/users/:id", requireAdminAuth, adminController.updateUser);
 // 회원 등급 수정
 router.put(
   "/admin/users/:id/grade",
@@ -124,12 +125,8 @@ router.get(
   requireKakao,
   userController.socialLogin
 );
-// 아이디 중복 확인
-router.post("/users/check/login-id", [loginId], userController.checkId);
 // 이메일 중복 확인
 router.post("/users/check/email", [email], userController.checkEmail);
-// 아이디 찾기
-router.post("/users/find/login-id", [email], userController.getIdByEmail);
 // 내 정보 조회
 router.get("/users", requireUserAuth, userController.getMyAccount);
 // 내 정보 수정
@@ -152,24 +149,15 @@ router.put("/users/pwd", requireUserAuth, userController.updatePwdByLogin);
 /*
   약관 API
 */
-// 전체 약관 내용 조회
+// 약관 전체에 대해 사용자 동의 여부 조회
 router.get("/terms", termController.getTerms);
-// 약관 내용 조회
-router.get("/terms/:name", termController.getTerm);
-// 약관 추가 admin
-router.post(
-  "/terms",
-  [termName, isRequired],
-  requireAdminAuth,
-  termController.createTerm
-);
+// 약관 코드별로 사용자 동의 여부 조회
+router.get("/terms/:code", termController.getTerm);
 
 // 보류
 // 비번 찾기
 router.post("/users/find/pwd", requireUserAuth, userController.getPwdByLoginId);
 //로그아웃
 router.post("/users/logout", userController.logout);
-// 약관 내용 수정
-router.put("/terms/:id", requireAdminAuth, termController.updateTerms);
 
 module.exports = router;

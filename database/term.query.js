@@ -1,22 +1,24 @@
 const db = require("./pool");
 
-exports.findAll = async () => {
-  return db.execute("select * from term").then((data) => {
-    return data[0];
-    console.log(data[0]);
-  });
+exports.findAll = async (id) => {
+  return db
+    .query("select * from user_termtbl where user_id=? ", [id])
+    .then((data) => data[0]);
 };
 
-exports.findById = async (name) => {
+exports.findByCode = async (id, code) => {
   return db
-    .execute("select * from term where termName=?", [name])
-    .then((data) => data[0]);
+    .query("select * from user_termtbl where user_id=? and term_code=?", [
+      id,
+      code,
+    ])
+    .then((data) => data[0][0]);
 };
 
 exports.createTerm = async (term) => {
   const { termName, termContent, isRequired } = term;
   return db
-    .execute(
+    .query(
       "insert into term(termName, termContent, isRequired) values(?,?,?)",
       [termName, termContent, isRequired]
     )
@@ -27,7 +29,7 @@ exports.createTerm = async (term) => {
 
 exports.createUserTerm = async (id, termName, isAgree) => {
   return db
-    .execute("insert into userterm(userId, termName, isAgree) values(?,?,?)", [
+    .query("insert into userterm(userId, termName, isAgree) values(?,?,?)", [
       id,
       termName,
       isAgree,
@@ -38,15 +40,10 @@ exports.createUserTerm = async (id, termName, isAgree) => {
     });
 };
 
-exports.agreeTerm = async (id, name, isAgree) => {
-  return db
-    .execute("update userterm set isAgree=? where userId=? and termName=?", [
-      isAgree,
-      id,
-      name,
-    ])
-    .then((data) => {
-      console.log(data[0]);
-      return data[0];
-    });
+exports.agreeTerm = async (id, isAgree, user_id) => {
+  await db.query("update user_termtbl set isAgree=? where userId=? and id=?", [
+    isAgree,
+    user_id,
+    id,
+  ]);
 };
