@@ -11,8 +11,7 @@ const {
   findByEmail,
   findBySocialId,
   createSocialUser,
-} = require("../../database/heesoo.user.query");
-const { UnauthorizedError } = require("restify-errors");
+} = require("../../database/user.query");
 require("dotenv").config();
 
 // 로그인
@@ -26,7 +25,7 @@ const passportVerify = async (username, password, done) => {
     const email = username;
     const pwd = password;
 
-    const user = await findByEmail(email);
+    const user = await findByEmail(email); // localtbl
     // 해당 이메일가 없다면 에러
     if (!user) {
       return done(null, { code: 404, msg: "존재하지 않는 아이디" });
@@ -56,7 +55,7 @@ const JWTConfig = {
 const UserJWTVerify = async (payload, done) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await findLocalById(payload.id);
+    const user = await findById(payload.id); // usertbl
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       return done(null, user);
@@ -72,7 +71,7 @@ const UserJWTVerify = async (payload, done) => {
 const AdminJWTVerify = async (payload, done) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await findLocalById(payload.id);
+    const user = await findLocalById(payload.id); // localtbl
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       // 관리자만 접근 가능

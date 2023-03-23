@@ -5,7 +5,7 @@ const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
 const passport = require("passport");
 const passportConfig = require("./api/passport/index");
-const router = require("./api/routes/heesoo.router.js");
+const router = require("./api/routes/router.js");
 
 const cookieOption = {
   httpOnly: true,

@@ -1,57 +1,9 @@
-// const restify = require("restify");
-// const router = restify.Router();
 const express = require("express");
 const router = express.Router();
-const userController = require("../controller/user.controller.js");
 const passport = require("passport");
-const { Router } = require("express");
-const { body, validationResult } = require("express-validator");
-const { HttpError } = require("restify-errors");
-const adminController = require("../controller/admin.controller.js");
-const termController = require("../controller/term.controller.js");
+const adminController = require("../controller/admin.controller");
+const userController = require("../controller/user.controller");
 
-/*
-  입력 검증 로직
-*/
-const loginId = body("loginId")
-  .notEmpty()
-  .isLength({ min: 1 })
-  .withMessage("아이디를 입력해주세요")
-  .isString();
-const userName = body("userName")
-  .notEmpty()
-  .isLength({ min: 1 })
-  .withMessage("이름을 입력해주세요")
-  .isString()
-  .isLength({ min: 2, max: 10 })
-  .withMessage("2~10자 이내로 입력해주세요");
-const email = body("email")
-  .notEmpty()
-  .isLength({ min: 1 })
-  .withMessage("이메일을 입력해주세요")
-  .isEmail()
-  .withMessage("이메일 형식으로 입력해주세요");
-const pwd = body("pwd")
-  .notEmpty()
-  .isLength({ min: 1 })
-  .withMessage("비밀번호를 입력해주세요")
-  .isString()
-  .isLength({ min: 5, max: 12 })
-  .withMessage("5~12자 이내로 입력해주세요");
-const grade = body("grade")
-  .notEmpty()
-  .withMessage("수정할 등급 id를 입력해주세요");
-const gradeName = body("gradeName")
-  .notEmpty()
-  .isLength({ min: 1 })
-  .withMessage("등급 이름을 입력해주세요");
-const termName = body("termName")
-  .notEmpty()
-  .isLength({ min: 1 })
-  .withMessage("약관 이름을 입력해주세요");
-const isRequired = body("isRequired")
-  .notEmpty()
-  .withMessage("약관 필수 여부를 선택해주세요");
 /*
   passport
 1. 로컬 로그인
@@ -77,47 +29,61 @@ const requireKakao = passport.authenticate("kakao", { session: false });
   관리자 API
 */
 // 전체 회원 조회 admin
-// router.get("/admin/users", requireAdminAuth, adminController.getUsers);
-router.get("/admin/users", adminController.getUsers);
-// 회원 필터링 조회
-// router.get("/users/filter", userController.getUsersfilter);
+router.get("/admin/users", requireAdminAuth, adminController.getUsers);
 
-// 회원 id로 조회
-// router.get("/admin/users/:id", requireAdminAuth, adminController.getUser);
-router.get("/admin/users/account/:id", adminController.getUserAccount);
+// 회원 계정 조회
+router.get(
+  "/admin/users/account/:id",
+  requireAdminAuth,
+  adminController.getUserAccount
+);
 
 // 회원 정보 상세 조회
-router.get("admin/users/info/:id", adminController.getUserInfo);
-
-// 회원 정보 수정
-router.put("/admin/users/:id", requireAdminAuth, adminController.updateUser);
-// 회원 등급 수정
-router.put(
-  "/admin/users/:id/grade",
+router.get(
+  "/admin/users/info/:id",
   requireAdminAuth,
-  [grade],
-  adminController.updateUserGrade
+  adminController.getUserInfo
 );
-// 등급 내용 수정
-router.put(
-  "/admin/grade/:id",
+
+// 회원 권한 수정
+router.patch(
+  "/admin/users/role/:id",
   requireAdminAuth,
-  [gradeName],
-  adminController.updateGrade
+  adminController.updateUserRole
 );
 
 /*
   회원 API
 */
-// 회원가입
-router.post("/users", [loginId, userName, email, pwd], userController.signUp);
-// 로그인
-router.post(
-  "/users/login/local",
-  [loginId, pwd],
-  requireSignIn,
-  userController.signIn
+// 회원가입 - 경민
+router.post("/users", userController.signUp);
+
+//이메일 유효성 인증 - 경민
+router.post("/users/check/email", userController.emailValid);
+//이메일 인증코드 확인 - 경민
+router.get("/users/check/email", userController.emailcodeCheck);
+//이메일 인증코드 확인 - 경민
+router.delete("/users/check/email", userController.emailcodeDelete);
+
+//내 프로필 수정(Userstbl) -경민(로그인)
+router.patch("/users/profile", requireUserAuth, userController.updateMyUsers);
+//내 정보 수정(UserDetailstbl) -경민(로그인)
+router.patch("/users", requireUserAuth, userController.updatePwdByLogin);
+
+//비밀번호 변경 -경민(로그인)
+router.patch(
+  "/users/change/pwd",
+  requireUserAuth,
+  userController.updatePwdByLogin
 );
+//비밀번호 찾기 - 경민(로그인 없이)
+router.patch("/users/find/pwd", userController.updatePwdByDB);
+
+//회원탈퇴 - 경민(로그인)
+router.post("/users/account", requireUserAuth, userController.deleteUser);
+
+// 로그인
+router.post("/users/login/local", requireSignIn, userController.signIn);
 // 소셜로그인 (카카오 엔드포인트, 콜백)
 router.get("/users/login/kakao", requireKakao);
 router.get(
@@ -126,38 +92,35 @@ router.get(
   userController.socialLogin
 );
 // 이메일 중복 확인
-router.post("/users/check/email", [email], userController.checkEmail);
+router.post("/users/check/email", userController.checkEmail);
 // 내 정보 조회
-router.get("/users", requireUserAuth, userController.getMyAccount);
-// 내 정보 수정
-router.put(
-  "/users",
-  [userName, email],
+router.get("/users", requireUserAuth, userController.getMyDetail);
+// 내 프로필 조회 (닉네임, 등급, 프로필)
+router.get("/users/profile", requireUserAuth, userController.getMyProfile);
+// 내 계정 정보 조회
+router.get("/users/account", requireUserAuth, userController.getMyAccount);
+// 내 주소 등록
+router.post(
+  "/users/address",
   requireUserAuth,
-  userController.updateMyAccount
+  userController.createUserAddress
 );
-// 회원 탈퇴
-router.delete("/users", requireUserAuth, userController.deleteUser);
+// 내 주소 조회
+router.get("/users/address", requireUserAuth, userController.getUserAddress);
+// 내 주소 수정
+router.put("/users/address", requireUserAuth, userController.updateUserAddress);
+// 내 주소 삭제
+router.delete(
+  "/users/address",
+  requireUserAuth,
+  userController.deleteUserAddress
+);
 // 약관 동의 (수정)
-router.put(
-  "/users/terms/:name",
-  requireUserAuth,
-  userController.updateUserTerms
-);
-router.put("/users/pwd", requireUserAuth, userController.updatePwdByLogin);
+router.put("/users/terms/:id", requireUserAuth, userController.updateTerm);
 
-/*
-  약관 API
-*/
 // 약관 전체에 대해 사용자 동의 여부 조회
-router.get("/terms", termController.getTerms);
+router.get("/terms", requireUserAuth, userController.getTerms);
 // 약관 코드별로 사용자 동의 여부 조회
-router.get("/terms/:code", termController.getTerm);
-
-// 보류
-// 비번 찾기
-router.post("/users/find/pwd", requireUserAuth, userController.getPwdByLoginId);
-//로그아웃
-router.post("/users/logout", userController.logout);
+router.get("/terms/:code", requireUserAuth, userController.getTerm);
 
 module.exports = router;
