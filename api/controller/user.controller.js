@@ -12,7 +12,7 @@ const {
   findUserDetailById,
   findLocalById,
   findSocialById,
-} = require("../../database/user.query.js");
+} = require("../../database/heesoo.user.query.js");
 
 module.exports = {
   // // 사용자 주소 조회

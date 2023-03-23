@@ -5,7 +5,7 @@ const {
   findSocialById,
   findUserInfoById,
   updateUserRole,
-} = require("../../database/user.query");
+} = require("../../database/heesoo.user.query");
 
 module.exports = {
   // 유저 목록 조회

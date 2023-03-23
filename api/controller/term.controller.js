@@ -1,4 +1,4 @@
-const { findByCode } = require("../../database/term.query");
+const { findByCode } = require("../../database/heesoo.term.query");
 const ResponseDto = require("../model/ResponseDto");
 const { validateReq } = require("./user.controller");
 

@@ -1,4 +1,4 @@
-const { agreeTerm, findAll } = require("../../database/term.query");
+const { agreeTerm, findAll } = require("../../database/heesoo.term.query");
 const {
   findUserAddress,
   createUserAddress,
@@ -9,7 +9,7 @@ const {
   findSocialById,
   findByEmail,
   deleteUserAddress,
-} = require("../../database/user.query");
+} = require("../../database/heesoo.user.query");
 const ResponseDto = require("../model/ResponseDto");
 
 module.exports = {

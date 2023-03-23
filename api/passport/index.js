@@ -11,7 +11,7 @@ const {
   findByEmail,
   findBySocialId,
   createSocialUser,
-} = require("../../database/user.query");
+} = require("../../database/heesoo.user.query");
 const { UnauthorizedError } = require("restify-errors");
 require("dotenv").config();
 
