@@ -13,29 +13,34 @@ exports.createLocalUser = async (users, terms) => {
     gender,
     birth,
   } = users;
-  const hashed = await bcrypt.hash(pwd, 10);
-  const insertId = db
-    .query(
-      "insert into userstbl(nickname,profile_img,grade_id,login_type) value(?,?,1,'LOCAL')",
-      [nickname, profile_img]
-    )
-    .then((data) => {
-      return data[0].insertId;
-    });
+  try {
+    const hashed = await bcrypt.hash(pwd, 10);
+    const insertId = await db
+      .query(
+        "insert into userstbl(nickname,profile_img,grade_id,login_type) values(?,?,1,'LOCAL')",
+        [nickname, profile_img]
+      )
+      .then((data) => {
+        console.log(data[0].insertId);
+        return data[0].insertId;
+      });
 
-  await db.query(
-    "insert into Localtbl(user_id,email,pwd,role) value(?,?,?,?)",
-    [insertId, email, hashed, role]
-  );
+    await db.query(
+      "insert into Localtbl(user_id, email, pwd, role) values(?,?,?,?)",
+      [insertId, email, hashed, role]
+    );
 
-  await db.query(
-    "insert into User_Detailstbl(user_id,name,phone,gender,birth) value(?,?,?,?,?)",
-    [insertId, name, phone, gender, birth]
-  );
+    await db.query(
+      "insert into User_Detailstbl(user_id,name,phone,gender,birth) values(?,?,?,?,?)",
+      [insertId, name, phone, gender, birth]
+    );
 
-  await this.termsIsRequired(terms, insertId);
+    await this.termsIsRequired(terms, insertId);
 
-  return insertId;
+    return insertId;
+  } catch (error) {
+    console.log(error);
+  }
 };
 
 //약관동의 등록 - 경민
@@ -55,16 +60,15 @@ exports.termsIsRequired = async (terms, userId) => {
 
 //이메일 조회 - 경민
 exports.findByEmail = async (email) => {
-  return db
+  return await db
     .query("select * from localtbl where email=?", [email])
     .then((data) => data[0][0]);
 };
-
 //이메일 유효성 검사(인증코드 전송) - 경민
 exports.validByEmail = async (localId) => {
   //이메일 인증코드 db에 저장
   const verificationCode = generateVerificationCode(); //인증코드 생성
-  const insertId = db
+  const insertId = await db
     .query("insert into Emailcodestbl(local_id,verification_code) value(?,?)", [
       localId,
       verificationCode,
@@ -77,7 +81,7 @@ exports.validByEmail = async (localId) => {
 
 //이메일 인증코드 확인 - 경민
 exports.findByVerificationCode = async (email) => {
-  const EmailCode = db.query(
+  const EmailCode = await db.query(
     "select verification_code from Emailcodestbl join Localtbl on Localtbl.id=Emailcodestbl.local_id where Localtbl.email=?",
     [email]
   );
@@ -118,14 +122,14 @@ exports.updateUserDetails = async (id, user) => {
   user_update_query += ` WHERE user_id = '${id}';`;
   console.log(user_update_query);
 
-  return db.query(user_update_query).then((data) => {
+  return await db.query(user_update_query).then((data) => {
     return data[0];
   });
 };
 //비밀번호 변경 - 경민
 exports.updatedPwd = async (id, pwd) => {
   const hashed = await bcrypt.hash(pwd, 10);
-  return db
+  return await db
     .query("update localtbl set pwd=? where user_id=?", [hashed, id])
     .then((data) => {
       return data[0];
@@ -134,21 +138,21 @@ exports.updatedPwd = async (id, pwd) => {
 //회원 탈퇴 - 경민
 exports.deleteUser = async (id, reason_text) => {
   let accountId;
-  const localType = db
+  const localType = await db
     .query("select login_type from userstbl where id=?", [id])
     .then((data) => {
       return data[0][0];
     });
   //console.log(localType.login_type);
   if (localType.login_type == "LOCAL") {
-    account_id = db
+    account_id = await db
       .query("select email from localtbl where user_id=?", [id])
       .then((data) => {
         return data[0][0];
       });
     accountId = account_id.email;
   } else {
-    account_id = db
+    account_id = await db
       .query("select sns_id from socialtbl where user_id=?", [id])
       .then((data) => {
         return data[0][0];
@@ -156,14 +160,14 @@ exports.deleteUser = async (id, reason_text) => {
     accountId = account_id.sns_id;
   }
 
-  const phone = db
+  const phone = await db
     .query("select phone from User_Detailstbl where user_id=?", [id])
     .then((data) => {
       return data[0][0];
     });
   //console.log(phone.phone);
 
-  const WithdrawlId = db
+  const WithdrawlId = await db
     .query(
       "insert into Withdrawltbl(user_id,account_id,phone,reason_text) values(?,?,?,?)",
       [id, accountId, phone.phone, reason_text]
@@ -185,13 +189,13 @@ exports.findAllUser = async () => {
 };
 
 exports.findById = async (id) => {
-  return db
+  return await db
     .query("select * from userstbl where id=?", [id])
     .then((data) => data[0][0]);
 };
 
 exports.findLocalById = async (id) => {
-  return db
+  return await db
     .query(
       "select id, user_id, email, created_at, role from localtbl where user_id=?",
       [id]
@@ -200,20 +204,20 @@ exports.findLocalById = async (id) => {
 };
 
 exports.findSocialById = async (id) => {
-  return db
+  return await db
     .query("select * from socialtbl where user_id=?", [id])
     .then((data) => data[0][0]);
 };
 
 exports.findUserDetailById = async (id) => {
-  return db
+  return await db
     .query("select * from user_detailtbl where user_id=?", [id])
     .then((data) => data[0][0]);
 };
 
 // user, user_detail, address 모두 조회 후 반환
 exports.findUserInfoById = async (id) => {
-  return db
+  return await db
     .query(
       "select * from userstbl u inner join user_detailtbl ud on u.id = ud.user_id inner join addresstbl ad on ud.user_id = ad.user_id",
       [id]
@@ -223,7 +227,7 @@ exports.findUserInfoById = async (id) => {
 
 exports.createSocialUser = async (users) => {
   const { nickname, sns_id, provider } = users;
-  const insertId = db
+  const insertId = await db
     .query(
       "insert into userstbl(nickname,grade_id,login_type) value(?,1,'SOCIAL')",
       [nickname]
@@ -263,7 +267,7 @@ exports.termsIsRequiredSocial = async (userId) => {
 
 //
 exports.updateUserRole = async (id, role) => {
-  return db
+  return await db
     .query("update localtbl set role=? where user_id=?", [role, id])
     .then((data) => {
       return data[0];
@@ -272,7 +276,7 @@ exports.updateUserRole = async (id, role) => {
 
 //
 exports.findBySocialId = async (id, provider) => {
-  return db
+  return await db
     .query("select * from socialtbl where sns_id=? and provider=?", [
       id,
       login_type,
@@ -283,7 +287,7 @@ exports.findBySocialId = async (id, provider) => {
 };
 //
 exports.findAllUserAddress = async (id) => {
-  return db
+  return await db
     .query("select * from user_addresstbl where user_id=?", [id])
     .then((data) => {
       return data[0][0];
@@ -291,7 +295,7 @@ exports.findAllUserAddress = async (id) => {
 };
 //
 exports.findUserAddressById = async (address_id, user_id) => {
-  return db
+  return await db
     .query("select * from user_addresstbl where address_id=? and user_id=?", [
       address_id,
       user_id,
@@ -305,7 +309,7 @@ exports.createUserAddress = async (address_request) => {
   const { zip_code, address, address_detail, request_msg, status } =
     address_request;
 
-  return db
+  return await db
     .query("insert into user_addresstbl values(?,?,?,?,?)", [
       zip_code,
       address,
@@ -322,7 +326,7 @@ exports.updateUserAddress = async (id, address_request) => {
   const { zip_code, address, address_detail, request_msg, status } =
     address_request;
 
-  return db
+  return await db
     .query(
       "update user set zip_code=?, address=?, address_detail=?, request_msg=?, status=? where user_id=?",
       [zip_code, address, address_detail, request_msg, status, id]
@@ -340,13 +344,13 @@ exports.deleteUserAddress = async (address_id, user_id) => {
 };
 
 exports.findAllUserTerms = async (id) => {
-  return db
+  return await db
     .query("select * from user_termtbl where user_id=? ", [id])
     .then((data) => data[0]);
 };
 
 exports.findByTermId = async (user_id, term_id) => {
-  return db
+  return await db
     .query("select * from user_termtbl where user_id=? and term_code=?", [
       user_id,
       term_id,
@@ -356,7 +360,7 @@ exports.findByTermId = async (user_id, term_id) => {
 
 exports.createTerm = async (term) => {
   const { termName, termContent, isRequired } = term;
-  return db
+  return await db
     .query(
       "insert into term(termName, termContent, isRequired) values(?,?,?)",
       [termName, termContent, isRequired]
@@ -367,7 +371,7 @@ exports.createTerm = async (term) => {
 };
 
 exports.createUserTerm = async (id, termName, isAgree) => {
-  return db
+  return await db
     .query("insert into userterm(userId, termName, isAgree) values(?,?,?)", [
       id,
       termName,
