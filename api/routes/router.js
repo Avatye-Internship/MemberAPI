@@ -71,7 +71,11 @@ router.patch("/users/profile", requireUserAuth, userController.updateMyUsers);
 router.patch("/users", requireUserAuth, userController.updateMyUserDetails);
 
 //비밀번호 변경 -경민(로그인)
-router.patch("/users/change/pwd",requireUserAuth,userController.updatePwdByLogin);
+router.patch(
+  "/users/change/pwd",
+  requireUserAuth,
+  userController.updatePwdByLogin
+);
 //비밀번호 찾기 - 경민(로그인 없이)
 router.patch("/users/find/pwd", userController.updatePwdByDB);
 
@@ -112,7 +116,7 @@ router.delete(
   userController.deleteUserAddress
 );
 // 약관 동의 (수정)
-router.put("/users/terms/:id", requireUserAuth, userController.updateTerm);
+router.patch("/users/terms/:id", requireUserAuth, userController.updateTerm);
 
 // 약관 전체에 대해 사용자 동의 여부 조회
 router.get("/terms", requireUserAuth, userController.getTerms);
