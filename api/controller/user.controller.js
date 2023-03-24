@@ -2,6 +2,7 @@ const passport = require("passport");
 const { BadRequestError } = require("restify-errors");
 const bcrypt = require("bcrypt");
 const ResponseDto = require("../model/ResponseDto.js");
+const jwt = require("jsonwebtoken");
 const {
   createLocalUser,
   findByEmail,
@@ -9,7 +10,6 @@ const {
   findByVerificationCode,
   deleteEmailCode,
   updateUserDetails,
-  updatedPwd,
   deleteUser,
   findUserDetailById,
   findLocalById,
@@ -22,6 +22,8 @@ const {
   deleteUserAddress,
   findAllUserTerms,
   findByTermId,
+  updateUser,
+  updatePwd,
 } = require("../../database/user.query.js");
 const nodemailer = require("nodemailer");
 require("dotenv").config();
@@ -320,11 +322,12 @@ module.exports = {
   // 로컬 회원가입 - 경민
   signUp: async (req, res) => {
     try {
-      const userReq = req.body; //일단 이것만
+      const userReq = req.body; 
       const termReq = req.body.terms;
 
       //1. email 중복 검사
       const emailExists = await findByEmail(userReq.email);
+      
       if (emailExists) {
         return res.status(409).send(new ResponseDto(409, "이메일 중복"));
       }
@@ -353,7 +356,7 @@ module.exports = {
       }
       //console.log(emailExists);
       //2. 이메일 인증코드 전송
-      const { emailCodesId, verificationCode } = await validByEmail(
+      const { insertId, verificationCode } = await validByEmail(
         emailExists.id
       );
 
@@ -370,7 +373,7 @@ module.exports = {
 
       return res
         .status(201)
-        .send(new ResponseDto(201, "이메일 인증 전송 성공"));
+        .send(new ResponseDto(201, "이메일 인증 전송 성공", { id: insertId }));
     } catch (error) {
       return res.status(500).json(error.message);
     }
@@ -379,21 +382,21 @@ module.exports = {
   //이메일 인증코드 확인 - 경민
   emailcodeCheck: async (req, res) => {
     try {
-      const { email } = req.body;
+      const userReq = req.body;
       //db의 해당 이메일 인증코드 조회
-      const EmailCode = await findByVerificationCode(email);
-      //console.log(EmailCode);
+      const EmailCode = await findByVerificationCode(userReq.email);
+      console.log(EmailCode);
       if (EmailCode == null) {
         return res
           .status(401)
           .send(new ResponseDto(401, "이메일 코드 조회 실패"));
       }
-      if (EmailCode.verification_code !== verificationCode) {
-        return res.status(401).send(new ResponseDto(401, "이메일 코드 불일치"));
-      }
+      // if (EmailCode.verification_code !== userReq.verificationCode) {
+      //   return res.status(401).send(new ResponseDto(401, "이메일 코드 조회 실패"));
+      // }
       return res
         .status(201)
-        .send(new ResponseDto(201, "이메일 인증코드 확인 성공"));
+        .send(new ResponseDto(201, "이메일 인증코드 확인 성공",{EmailCode}));
     } catch (error) {
       return res.status(500).json(error.message);
     }
@@ -427,7 +430,7 @@ module.exports = {
       const newUser = await updateUser(req.user.id, userReq);
       return res
         .status(200)
-        .send(new ResponseDto(200, "내 프로필 수정 성공", { id: newUser }));
+        .send(new ResponseDto(200, "내 프로필 수정 성공"));
     } catch (error) {
       return res.status(500).json(error.message);
     }
@@ -437,17 +440,16 @@ module.exports = {
     try {
       const userReq = req.body;
       // 권한 검사
-      // if (req.user.id == null) {
-      //   return res
-      //     .status(req.user.code)
-      //     .send(new ResponseDto(req.user.code, req.user.msg));
-      // }
-      //const newUser = await updateUserDetails(req.user.id, userReq);
-
-      const newUser = await updateUserDetails(userReq.id, userReq.user);
+      if (req.user.id == null) {
+        return res
+          .status(req.user.code)
+          .send(new ResponseDto(req.user.code, req.user.msg));
+      }
+      
+      const newUser = await updateUserDetails(req.user.id, userReq.users);
       return res
         .status(200)
-        .send(new ResponseDto(200, "내 프로필 수정 성공", { id: userReq.id }));
+        .send(new ResponseDto(200, "내 정보 수정 성공"));
     } catch (error) {
       return res.status(500).json(error.message);
     }
@@ -456,7 +458,7 @@ module.exports = {
   // 비밀번호 변경 ( 로그인한 상태에서 ) -경민
   updatePwdByLogin: async (req, res) => {
     try {
-      const { oldPwd, newPwd } = req.body;
+      const userReq = req.body;
 
       // 권한 검사
       if (req.user.id == null) {
@@ -464,12 +466,14 @@ module.exports = {
           .status(req.user.code)
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
+      console.log(req.user);
+      const local=await findLocalById(req.user.id);
       // 해쉬된 비밀번호 비교
-      const isSame = await bcrypt.compare(oldPwd, req.user.pwd);
+      const isSame = await bcrypt.compare(userReq.oldPwd,local.pwd);
 
       // 비번 같으면 변경 가능
       if (isSame) {
-        const updatedPwd = await updatedPwd(req.user.id, newPwd);
+        const updatedPwd = await updatePwd(req.user.id, userReq.newPwd);
         return res.status(200).send(new ResponseDto(200, "비밀번호 변경 성공"));
       } else {
         return res
@@ -500,7 +504,7 @@ module.exports = {
             )
           );
       }
-      const updatePwd = await updatedPwd(oldPwd.user_id, userReq.newPwd);
+      const updatedPwd = await updatePwd(oldPwd.user_id, userReq.newPwd);
       return res.status(200).send(new ResponseDto(200, "비밀번호 변경 성공"));
     } catch (err) {
       return res.status(500).json(err.message);

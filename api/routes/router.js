@@ -68,14 +68,10 @@ router.delete("/users/check/email", userController.emailcodeDelete);
 //내 프로필 수정(Userstbl) -경민(로그인)
 router.patch("/users/profile", requireUserAuth, userController.updateMyUsers);
 //내 정보 수정(UserDetailstbl) -경민(로그인)
-router.patch("/users", requireUserAuth, userController.updatePwdByLogin);
+router.patch("/users", requireUserAuth, userController.updateMyUserDetails);
 
 //비밀번호 변경 -경민(로그인)
-router.patch(
-  "/users/change/pwd",
-  requireUserAuth,
-  userController.updatePwdByLogin
-);
+router.patch("/users/change/pwd",requireUserAuth,userController.updatePwdByLogin);
 //비밀번호 찾기 - 경민(로그인 없이)
 router.patch("/users/find/pwd", userController.updatePwdByDB);
 
