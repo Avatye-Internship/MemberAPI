@@ -6,7 +6,7 @@ const pool = mysql.createPool({
   port: 3306,
   user: "root",
   password: "1234",
-  database: "memberdb",
+  database: "memberdb2",
 });
 
 const db = pool.promise();
