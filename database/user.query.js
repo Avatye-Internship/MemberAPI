@@ -56,7 +56,7 @@ exports.termsIsRequired = async (terms, userId) => {
 //이메일 조회 - 경민
 exports.findByEmail = async (email) => {
   return db
-    .query("select * from localtbl where email=?", [email])
+    .query("select * from userstbl where email=? and active=1", [email])
     .then((data) => data[0][0]);
 };
 
@@ -176,12 +176,11 @@ exports.deleteUser = async (id, reason_text) => {
 };
 
 exports.findAllUser = async () => {
-  const social = await db.query("select * from socialtbl");
-  const local = await db.query(
-    "select id, user_id, email, created_at, role from localtbl"
+  const users = await db.query(
+    "select id, user_grade_id, login_type, email, created_at, updated_at, active, deleted_at, role from userstbl"
   );
 
-  return { social: social[0], local: local[0] };
+  return users;
 };
 
 exports.findById = async (id) => {
@@ -207,7 +206,13 @@ exports.findSocialById = async (id) => {
 
 exports.findUserDetailById = async (id) => {
   return db
-    .query("select * from user_detailtbl where user_id=?", [id])
+    .query("select * from user_detailstbl where user_id=?", [id])
+    .then((data) => data[0][0]);
+};
+
+exports.findUserBasicById = async (id) => {
+  return db
+    .query("select nickname, profile_img from userstbl where id=?", [id])
     .then((data) => data[0][0]);
 };
 
@@ -215,31 +220,60 @@ exports.findUserDetailById = async (id) => {
 exports.findUserInfoById = async (id) => {
   return db
     .query(
-      "select * from userstbl u inner join user_detailtbl ud on u.id = ud.user_id inner join addresstbl ad on ud.user_id = ad.user_id",
+      "select * from userstbl u inner join user_detailstbl ud on u.id = ud.user_id inner join addresstbl ad on ud.user_id = ad.user_id",
+      [id]
+    )
+    .then((data) => data[0][0]);
+};
+
+exports.findUserProfileById = async (id) => {
+  // 등급, 이메일, 로그인타입, 포인트, 프로필이미지, 닉네임
+  return db
+    .query(
+      "select u.id, u.user_grade_id, u.email, u.login_type, ud.point, ud.profile_img, ud.nickname from userstbl u inner join user_detailtbl ud on u.id = ud.user_id",
       [id]
     )
     .then((data) => data[0][0]);
 };
 
 exports.createSocialUser = async (users) => {
-  const { nickname, sns_id, provider } = users;
-  const insertId = db
-    .query(
-      "insert into userstbl(nickname,grade_id,login_type) value(?,1,'SOCIAL')",
-      [nickname]
-    )
-    .then((data) => {
-      return data[0].insertId;
-    });
-  await db.query(
-    "insert into Socialtbl(user_id,sns_id, provider) value(?,?,?)",
-    [insertId, sns_id, provider]
-  );
-  await db.query(
-    "insert into User_Detailstbl(user_id,name,point,total_order_amount) value(?,?,0,0)",
-    [insertId, nickname]
-  );
-  await this.termsIsRequiredSocial(terms, insertId);
+  const { login_type, email, open_id, nickname } = users;
+
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    // users tbl
+    const insertId = await db
+      .query(
+        "insert into userstbl(user_grade_id, login_type, email) value(3,?, ?)",
+        [login_type, email]
+      )
+      .then((data) => {
+        return data[0].insertId;
+      });
+    // social tbl
+    await db.query("insert into Socialtbl(user_id,open_id) value(?,?)", [
+      insertId,
+      open_id,
+    ]);
+
+    // user detail
+    await db.query(
+      "insert into User_Detailstbl(user_id,name,point,total_order_amount, nickname) value(?,?,0,0,?)",
+      [insertId, nickname, nickname]
+    );
+
+    // user terms
+    await this.termsIsRequiredSocial(insertId);
+
+    await conn.commit();
+    return insertId;
+  } catch (error) {
+    console.log(error);
+    await conn.rollback();
+  } finally {
+    conn.release();
+  }
 };
 
 exports.termsIsRequiredSocial = async (userId) => {
@@ -264,7 +298,7 @@ exports.termsIsRequiredSocial = async (userId) => {
 //
 exports.updateUserRole = async (id, role) => {
   return db
-    .query("update localtbl set role=? where user_id=?", [role, id])
+    .query("update userstbl set role=? where id=?", [role, id])
     .then((data) => {
       return data[0];
     });
@@ -284,7 +318,7 @@ exports.findBySocialId = async (id, provider) => {
 //
 exports.findAllUserAddress = async (id) => {
   return db
-    .query("select * from user_addresstbl where user_id=?", [id])
+    .query("select * from addresstbl where user_id=?", [id])
     .then((data) => {
       return data[0][0];
     });
@@ -292,7 +326,7 @@ exports.findAllUserAddress = async (id) => {
 //
 exports.findUserAddressById = async (address_id, user_id) => {
   return db
-    .query("select * from user_addresstbl where address_id=? and user_id=?", [
+    .query("select * from addresstbl where address_id=? and user_id=?", [
       address_id,
       user_id,
     ])
@@ -301,17 +335,72 @@ exports.findUserAddressById = async (address_id, user_id) => {
     });
 };
 
+// 기존 기본배송지 -> 일반 배송지
+exports.updateExDefaultAddress = async (user_id) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    // 기본 배송지 찾기
+    const exDefaultId = await db.query(
+      "select address_id from addresstbl where user_id=? and status=1",
+      [user_id]
+    );
+    // 일반 배송지로 변경
+    await db.query("update addresstbl set status=0 where address_id=?", [
+      exDefaultId,
+    ]);
+    conn.commit();
+  } catch (error) {
+    console.log(error);
+    await conn.rollback();
+  } finally {
+    conn.release();
+  }
+};
+
+// 제일 최근 배송지 -> 기본 배송지
+exports.updateNewDefaultAddress = async (user_id) => {
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    // 제일 최근 배송지 찾기
+    const exDefaultId = await db.query(
+      "select address_id from addresstbl where user_id=? and status=0 order by updated_at desc limit 1",
+      [user_id]
+    );
+    // 기본 배송지로 변경
+    await db.query("update addresstbl set status=1 where address_id=?", [
+      exDefaultId,
+    ]);
+    conn.commit();
+  } catch (error) {
+    console.log(error);
+    await conn.rollback();
+  } finally {
+    conn.release();
+  }
+};
+
 exports.createUserAddress = async (address_request) => {
-  const { zip_code, address, address_detail, request_msg, status } =
-    address_request;
+  const {
+    zip_code,
+    address,
+    address_detail,
+    request_msg,
+    status,
+    receiver_name,
+    receiver_phone,
+  } = address_request;
 
   return db
-    .query("insert into user_addresstbl values(?,?,?,?,?)", [
+    .query("insert into addresstbl values(?,?,?,?,?)", [
       zip_code,
       address,
       address_detail,
       request_msg,
       status,
+      receiver_name,
+      receiver_phone,
     ])
     .then((data) => {
       return data[0].insertId;
@@ -324,7 +413,7 @@ exports.updateUserAddress = async (id, address_request) => {
 
   return db
     .query(
-      "update user set zip_code=?, address=?, address_detail=?, request_msg=?, status=? where user_id=?",
+      "update userstbl set zip_code=?, address=?, address_detail=?, request_msg=?, status=? where user_id=?",
       [zip_code, address, address_detail, request_msg, status, id]
     )
     .then((data) => {
@@ -380,10 +469,10 @@ exports.createUserTerm = async (id, termName, isAgree) => {
 };
 
 exports.agreeTerm = async (id, isAgree, user_id) => {
-  await db.query("update user_termtbl set isAgree=? where userId=? and id=?", [
+  await db.query("update user_termtbl set isAgree=? where id=? and userId=?", [
     isAgree,
-    user_id,
     id,
+    user_id,
   ]);
 };
 

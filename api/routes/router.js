@@ -11,8 +11,13 @@ const userController = require("../controller/user.controller");
 3. 관리자 접근 
 4. 카카오 로그인
 */
-const requireSignIn = passport.authenticate("local", { session: false });
+const requireUserSignIn = passport.authenticate("local-user", {
+  session: false,
+});
 
+const requireAdminSignIn = passport.authenticate("local-admin", {
+  session: false,
+});
 // 사용자만 접근 가능한 api에 달아주는 passport
 const requireUserAuth = passport.authenticate("jwt-user", {
   session: false,
@@ -28,6 +33,7 @@ const requireKakao = passport.authenticate("kakao", { session: false });
 /*
   관리자 API
 */
+router.post("/admin/login", requireAdminSignIn, adminController.adminSignIn);
 // 전체 회원 조회 admin
 router.get("/admin/users", requireAdminAuth, adminController.getUsers);
 
@@ -83,7 +89,7 @@ router.patch("/users/find/pwd", userController.updatePwdByDB);
 router.post("/users/account", requireUserAuth, userController.deleteUser);
 
 // 로그인
-router.post("/users/login/local", requireSignIn, userController.signIn);
+router.post("/users/login/local", requireUserSignIn, userController.signIn);
 // 소셜로그인 (카카오 엔드포인트, 콜백)
 router.get("/users/login/kakao", requireKakao);
 router.get(
@@ -95,10 +101,10 @@ router.get(
 router.post("/users/check/email", userController.checkEmail);
 // 내 정보 조회
 router.get("/users", requireUserAuth, userController.getMyDetail);
-// 내 프로필 조회 (닉네임, 등급, 프로필)
+// 내 프로필 조회 (이메일, 프로필이미지, 닉네임, 등급, 로그인타입, ..)
 router.get("/users/profile", requireUserAuth, userController.getMyProfile);
-// 내 계정 정보 조회
-router.get("/users/account", requireUserAuth, userController.getMyAccount);
+// 닉네임, 프로필 이미지만 조회
+router.get("users/basic-info", requireUserAuth, userController.getMyBasicInfo);
 // 내 주소 등록
 router.post(
   "/users/address",
@@ -117,7 +123,6 @@ router.delete(
 );
 // 약관 동의 (수정)
 router.patch("/users/terms/:id", requireUserAuth, userController.updateTerm);
-
 // 약관 전체에 대해 사용자 동의 여부 조회
 router.get("/terms", requireUserAuth, userController.getTerms);
 // 약관 코드별로 사용자 동의 여부 조회
