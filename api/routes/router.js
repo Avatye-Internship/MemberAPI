@@ -64,8 +64,11 @@ router.patch(
 // 회원가입 
 router.post("/users", userController.signUp);
 
-//이메일 유효성 인증 
-router.post("/users/check/email", userController.emailValid);
+//이메일 유효성 인증 (회원가입 시)
+router.get("/users/check/email", userController.emailValid_signUp);
+//이메일 유효성 인증 (비밀번호 찾기 시)
+router.get("/users/check/email-pwd", userController.emailValid_updatePwdByDB);
+
 // //이메일 인증코드 확인 
 // router.get("/users/check/email", userController.emailcodeCheck);
 // //이메일 인증코드 확인 
@@ -95,7 +98,7 @@ router.get(
   userController.socialLogin
 );
 // 이메일 중복 확인
-router.post("/users/check/email", userController.checkEmail);
+//router.post("/users/check/email", userController.checkEmail);
 // 내 정보 조회
 router.get("/users", requireUserAuth, userController.getMyDetail);
 // 내 프로필 조회 (이메일, 프로필이미지, 닉네임, 등급, 로그인타입, ..)
