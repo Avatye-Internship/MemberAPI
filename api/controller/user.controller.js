@@ -88,22 +88,22 @@ module.exports = {
     }
   },
 
-  // email 중복 확인
-  checkEmail: async (req, res) => {
-    try {
-      const email = req.body.email;
-      // email 중복 확인
-      const isExist = await findByEmail(email);
-      if (isExist) {
-        return res.status(409).send(new ResponseDto(409, "이미 가입된 이메일"));
-      } else {
-        return res.status(200).send(new ResponseDto(200, "가입 가능한 이메일"));
-      }
-    } catch (error) {
-      console.log(err);
-      return res.status(500).json(error.message);
-    }
-  },
+  //email 중복 확인
+  // checkEmail: async (req, res) => {
+  //   try {
+  //     const email = req.body.email;
+  //     // email 중복 확인
+  //     const isExist = await findByEmail(email);
+  //     if (isExist) {
+  //       return res.status(409).send(new ResponseDto(409, "이미 가입된 이메일"));
+  //     } else {
+  //       return res.status(200).send(new ResponseDto(200, "가입 가능한 이메일"));
+  //     }
+  //   } catch (error) {
+  //     console.log(err);
+  //     return res.status(500).json(error.message);
+  //   }
+  // },
 
   // 내 정보 조회 (유저)
   getMyProfile: async (res, req) => {
@@ -346,19 +346,13 @@ module.exports = {
       return res.status(500).send(err.message);
     }
   },
-  // 로컬 회원가입 - 경민
+  // 로컬 회원가입 
   signUp: async (req, res) => {
     try {
       const userReq = req.body;
       const termReq = req.body.terms;
 
-      //1. email 중복 검사
-      const emailExists = await findByEmail(userReq.email);
-
-      if (emailExists) {
-        return res.status(409).send(new ResponseDto(409, "이메일 중복"));
-      }
-      //2. 회원 정보 insert
+      //회원 정보 insert
       const insertId = await createLocalUser(userReq, termReq);
       return res
         .status(201)
@@ -368,22 +362,19 @@ module.exports = {
     }
   },
 
-  //이메일 유효성 인증 - 경민
-  emailValid: async (req, res) => {
+  //이메일 유효성 인증(로컬 회원가입 시)
+  emailValid_signUp: async (req, res) => {
     try {
       const email = req.body.email;
       const subject = "Avatye 이메일 인증";
+      const verificationCode = generateVerificationCode(); //인증코드 생성 
 
       //1. email db에 존재하는지 확인
       const emailExists = await findByEmail(email);
-      if (!emailExists) {
-        return res
-          .status(401)
-          .send(new ResponseDto(401, "존재하지 않는 이메일"));
+      if(emailExists){
+        return res.status(409).send(new ResponseDto(409, `이미 '${emailExists.login_type}'로 가입된 이메일입니다.`));
       }
-      //console.log(emailExists);
       //2. 이메일 인증코드 전송
-      const { insertId, verificationCode } = await validByEmail(emailExists.id);
 
       const text = `인증코드는 ${verificationCode} 입니다.`;
       let mailOptions = {
@@ -392,73 +383,70 @@ module.exports = {
         subject: subject,
         text: text,
       };
-      //console.log(emailCodeId);
+
       const info = await transporter.sendMail(mailOptions); //이메일 전송
       console.log("Email sent: " + info.response);
 
       return res
         .status(201)
-        .send(new ResponseDto(201, "이메일 인증 전송 성공", { id: insertId }));
+        .send(new ResponseDto(201, "이메일 인증 전송 성공", { email : email, verificationCode: verificationCode }));
     } catch (error) {
       return res.status(500).json(error.message);
     }
   },
 
-  //이메일 인증코드 확인 - 경민
-  emailcodeCheck: async (req, res) => {
-    try {
-      const userReq = req.body;
-      //db의 해당 이메일 인증코드 조회
-      const EmailCode = await findByVerificationCode(userReq.email);
-      console.log(EmailCode);
-      if (EmailCode == null) {
-        return res
-          .status(401)
-          .send(new ResponseDto(401, "이메일 코드 조회 실패"));
-      }
-      // if (EmailCode.verification_code !== userReq.verificationCode) {
-      //   return res.status(401).send(new ResponseDto(401, "이메일 코드 조회 실패"));
-      // }
-      return res
-        .status(201)
-        .send(new ResponseDto(201, "이메일 인증코드 확인 성공", { EmailCode }));
-    } catch (error) {
-      return res.status(500).json(error.message);
-    }
-  },
-
-  //이메일 인증코드 삭제 - 경민
-  emailcodeDelete: async (req, res) => {
+  //이메일 유효성 인증(비밀번호 변경 시)
+  emailValid_updatePwdByDB: async (req, res) => {
     try {
       const email = req.body.email;
-      //db의 해당 이메일 인증코드 삭제
-      await deleteEmailCode(email);
+      const subject = "Avatye 이메일 인증";
+      const verificationCode = generateVerificationCode(); //인증코드 생성 
+
+      //1. email db에 존재하는지 확인
+      const emailExists = await findByEmail(email);
+      if(!emailExists){
+        return res.status(401).send(new ResponseDto(401, "존재하지 않는 이메일입니다."));
+      }
+      //2. 이메일 인증코드 전송
+      const text = `인증코드는 ${verificationCode} 입니다.`;
+      let mailOptions = {
+        from: "ngm9464@gmail.com",
+        to: email,
+        subject: subject,
+        text: text,
+      };
+      
+      const info = await transporter.sendMail(mailOptions); //이메일 전송
+      console.log("Email sent: " + info.response);
 
       return res
         .status(201)
-        .send(new ResponseDto(201, "이메일 인증코드 삭제 성공"));
+        .send(new ResponseDto(201, "이메일 인증 전송 성공", { email : email, verificationCode: verificationCode }));
     } catch (error) {
       return res.status(500).json(error.message);
     }
   },
 
-  //내 프로필 수정 -경민
-  updateMyUsers: async (req, res) => {
-    try {
-      const userReq = req.body;
-      // 권한 검사
-      if (req.user.id == null) {
-        return res
-          .status(req.user.code)
-          .send(new ResponseDto(req.user.code, req.user.msg));
-      }
-      const newUser = await updateUser(req.user.id, userReq);
-      return res.status(200).send(new ResponseDto(200, "내 프로필 수정 성공"));
-    } catch (error) {
-      return res.status(500).json(error.message);
-    }
-  },
-  //내 정보 수정 -경민
+  //내 프로필 수정
+  // updateMyUsers: async (req, res) => {
+  //   try {
+  //     const userReq = req.body;
+  //     // 권한 검사
+  //     if (req.user.id == null) {
+  //       return res
+  //         .status(req.user.code)
+  //         .send(new ResponseDto(req.user.code, req.user.msg));
+  //     }
+  //     const newUser = await updateUser(req.user.id, userReq);
+  //     return res
+  //       .status(200)
+  //       .send(new ResponseDto(200, "내 프로필 수정 성공"));
+  //   } catch (error) {
+  //     return res.status(500).json(error.message);
+  //   }
+  // },
+
+  //내 정보 수정 
   updateMyUserDetails: async (req, res) => {
     try {
       const userReq = req.body;
@@ -476,7 +464,7 @@ module.exports = {
     }
   },
 
-  // 비밀번호 변경 ( 로그인한 상태에서 ) -경민
+  // 비밀번호 변경 ( 로그인한 상태에서 ) 
   updatePwdByLogin: async (req, res) => {
     try {
       const userReq = req.body;
@@ -488,9 +476,9 @@ module.exports = {
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
       console.log(req.user);
-      const local = await findLocalById(req.user.id);
+      const User=await findById(req.user.id);
       // 해쉬된 비밀번호 비교
-      const isSame = await bcrypt.compare(userReq.oldPwd, local.pwd);
+      const isSame = await bcrypt.compare(userReq.oldPwd,User.pwd);
 
       // 비번 같으면 변경 가능
       if (isSame) {
@@ -506,33 +494,30 @@ module.exports = {
     }
   },
 
-  // 비밀번호 찾기 ( 로그인 X ) -경민
+  // 비밀번호 찾기 ( 로그인 X ) 
   updatePwdByDB: async (req, res) => {
     try {
       const userReq = req.body;
 
-      //이메일 해당하는 pwd 찾기
-      const oldPwd = await findByEmail(userReq.email);
-      const isSame = await bcrypt.compare(userReq.newPwd, oldPwd.pwd);
-      // 비번 같으면 변경 가능
-      if (isSame) {
-        return res
-          .status(400)
-          .send(
-            new ResponseDto(
-              400,
-              "이전 비밀번호와 일치합니다. 다른 비밀번호를 입력해주세요"
-            )
-          );
+      //2. 이메일 해당하는 pwd 찾기
+      const UserEmail = await findByEmail(userReq.email);
+      if (!UserEmail) {
+        return res.status(401).send(new ResponseDto(401, "존재하지 않는 이메일"));
       }
-      const updatedPwd = await updatePwd(oldPwd.user_id, userReq.newPwd);
+      const isSame = await bcrypt.compare(userReq.newPwd, UserEmail.pwd);
+      // 비번 같으면 변경 불가능
+      if (isSame) {
+        return res.status(400).send(new ResponseDto( 400,"이전 비밀번호와 일치합니다. 다른 비밀번호를 입력해주세요"));
+      }
+
+      const updatedPwd = await updatePwd(UserEmail.user_id, userReq.newPwd);
       return res.status(200).send(new ResponseDto(200, "비밀번호 변경 성공"));
     } catch (err) {
       return res.status(500).json(err.message);
     }
   },
 
-  // 회원 탈퇴 - 경민
+  // 회원 탈퇴 
   deleteUser: async (req, res) => {
     try {
       const reason_text = req.body.reason_text;
@@ -581,9 +566,20 @@ module.exports = {
 };
 
 // 토큰 만들기
-const generateJWTToken = async (id, role) => {
+const generateJWTToken = async (id, role) =>  {
   const token = jwt.sign({ id, role }, process.env.JWT_SECRET, {
     expiresIn: "3d",
   });
   return token;
+};
+
+//인증코드 생성
+const generateVerificationCode = () => {
+  const chars =
+    "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  let code = "";
+  for (let i = 0; i < 6; i++) {
+    code += chars[Math.floor(Math.random() * chars.length)];
+  }
+  return code;
 };

@@ -61,31 +61,28 @@ router.patch(
 /*
   회원 API
 */
-// 회원가입 - 경민
+// 회원가입 
 router.post("/users", userController.signUp);
 
-//이메일 유효성 인증 - 경민
+//이메일 유효성 인증 
 router.post("/users/check/email", userController.emailValid);
-//이메일 인증코드 확인 - 경민
-router.get("/users/check/email", userController.emailcodeCheck);
-//이메일 인증코드 확인 - 경민
-router.delete("/users/check/email", userController.emailcodeDelete);
+// //이메일 인증코드 확인 
+// router.get("/users/check/email", userController.emailcodeCheck);
+// //이메일 인증코드 확인 
+// router.delete("/users/check/email", userController.emailcodeDelete);
 
-//내 프로필 수정(Userstbl) -경민(로그인)
-router.patch("/users/profile", requireUserAuth, userController.updateMyUsers);
-//내 정보 수정(UserDetailstbl) -경민(로그인)
+// //내 프로필 수정(Userstbl)
+// router.patch("/users/profile", requireUserAuth, userController.updateMyUsers);
+
+//내 정보 수정(UserDetailstbl)
 router.patch("/users", requireUserAuth, userController.updateMyUserDetails);
 
-//비밀번호 변경 -경민(로그인)
-router.patch(
-  "/users/change/pwd",
-  requireUserAuth,
-  userController.updatePwdByLogin
-);
-//비밀번호 찾기 - 경민(로그인 없이)
+//비밀번호 변경 
+router.patch("/users/change/pwd",requireUserAuth,userController.updatePwdByLogin);
+//비밀번호 찾기 
 router.patch("/users/find/pwd", userController.updatePwdByDB);
 
-//회원탈퇴 - 경민(로그인)
+//회원탈퇴 
 router.post("/users/account", requireUserAuth, userController.deleteUser);
 
 // 로그인
