@@ -1,16 +1,9 @@
-const express = require("express");
-const router = express.Router();
-const passport = require("passport");
-const AdminController = require("../controller/admin.controller");
-const UserController = require("../controller/user.controller");
+import { Router } from "restify-router";
+import AdminController from "../controller/admin.controller";
+import UserController from "../controller/user.controller";
+import "../passport";
 
-/*
-  passport
-1. 로컬 로그인
-2. 유저 접근
-3. 관리자 접근 
-4. 카카오 로그인
-*/
+const router = new Router();
 const requireUserSignIn = passport.authenticate("local-user", {
   session: false,
 });
@@ -31,8 +24,8 @@ const requireAdminAuth = passport.authenticate("jwt-admin", {
 const requireKakao = passport.authenticate("kakao", { session: false });
 
 /*
-  관리자 API
-*/
+    관리자 API
+  */
 router.post("/admin/login", requireAdminSignIn, AdminController.adminSignIn);
 // 전체 회원 조회 admin
 router.get("/admin/users", requireAdminAuth, AdminController.getUsers);
@@ -59,8 +52,8 @@ router.patch(
 );
 
 /*
-  회원 API
-*/
+    회원 API
+  */
 // 회원가입
 router.post("/users", UserController.signUp);
 
@@ -120,7 +113,7 @@ router.get("/users/address", requireUserAuth, UserController.getUserAddress);
 // 내 주소 수정
 router.put("/users/address", requireUserAuth, UserController.updateUserAddress);
 // 내 주소 삭제
-router.delete(
+router.del(
   "/users/address",
   requireUserAuth,
   UserController.deleteUserAddress
@@ -132,4 +125,4 @@ router.get("/terms", requireUserAuth, UserController.getTerms);
 // 약관 코드별로 사용자 동의 여부 조회
 router.get("/terms/:code", requireUserAuth, UserController.getTerm);
 
-module.exports = router;
+export { router };

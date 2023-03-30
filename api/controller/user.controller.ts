@@ -1,56 +1,10 @@
-const passport = require("passport");
-const { BadRequestError } = require("restify-errors");
-const bcrypt = require("bcrypt");
-const ResponseDto = require("../model/ResponseDto.js");
-const jwt = require("jsonwebtoken");
-const {
-  createLocalUser,
-  findByEmail,
-  validByEmail,
-  findByVerificationCode,
-  deleteEmailCode,
-  updateUserDetails,
-  deleteUser,
-  findUserDetailById,
-  findLocalById,
-  agreeTerm,
-  createUserAddress,
-  updateUserAddress,
-  findAllUserAddress,
-  findUserAddressById,
-  deleteUserAddress,
-  findAllUserTerms,
-  findByTermId,
-  updateUser,
-  updatePwd,
-  createSocialUser,
-  updateExDefaultAddress,
-  updateNewDefaultAddress,
-  findUserProfileById,
-  findUserBasicById,
-} = require("../../database/user.query.js");
-const nodemailer = require("nodemailer");
-require("dotenv").config();
-const smtpTransport = require("nodemailer-smtp-transport");
-const db = require("../../database/pool.js");
+import userQuery from "../../database/user.query";
 
-//메일 보내는 user 생성
-const transporter = nodemailer.createTransport(
-  smtpTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    secure: true,
-    auth: {
-      user: "ngm9464@gmail.com",
-      pass: process.env.PASS,
-    },
-  })
-);
 
-module.exports = {
-  // 로컬 로그인
+class UserController {
+    // 로컬 로그인
   // local login passport 실행후 user 반환
-  signIn: async (req: Request, res: Response) => {
+  public async signIn (req: Request, res: Response) {
     try {
       const user = req.user; // usertbl
       // 로그인 실패시 에러 반환
@@ -69,7 +23,7 @@ module.exports = {
   },
 
   // 소셜 로그인
-  socialLogin: async (req: Request, res: Response) => {
+  public async  socialLogin (req: Request, res: Response) {
     try {
       const user = req.user; // socialtbl
       // 로그인 실패시 에러 반환
@@ -106,7 +60,7 @@ module.exports = {
   // },
 
   // 내 정보 조회 (유저)
-  getMyProfile: async (req: Requst, res: Response) => {
+  public async getMyProfile (req: Requst, res: Response) {
     try {
       const user_id = req.user.id;
       if (user_id == null) {
@@ -117,7 +71,7 @@ module.exports = {
       }
 
       // 유저테이블과 조인해서 i/o를 줄이는 쪽으로..
-      const user = await findUserProfileById(user_id);
+      const user = await userQuery.findUserProfileById(user_id);
       return res
         .status(200)
         .send(new ResponseDto(200, "내 정보 조회 성공", req.user));
@@ -125,10 +79,10 @@ module.exports = {
       console.log(err);
       return res.status(500).send(err.message);
     }
-  },
+  }
 
   // 내 상세 정보 조회 (유저디테일) - 이름, 닉네임, 핸드폰번호, 성별, 생년월일
-  getMyDetail: async (req: Requst, res: Response) => {
+  public async getMyDetail async (req: Requst, res: Response) {
     try {
       const user_id = req.user.id; // usertbl
       if (user_id == null) {
@@ -148,7 +102,7 @@ module.exports = {
   },
 
   // 프로필 이미지, 닉네임
-  getMyBasicInfo: async (req: Requst, res: Response) => {
+  public async getMyBasicInfo (req: Requst, res: Response)  {
     try {
       const user_id = req.user.id;
       if (user_id == null) {
@@ -158,7 +112,7 @@ module.exports = {
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
 
-      const user = await findUserBasicById(user_id);
+      const user = await userQuery.findUserBasicById(user_id);
       return res
         .status(200)
         .send(
@@ -170,7 +124,7 @@ module.exports = {
     }
   },
 
-  updateTerm: async (req: Requst, res: Response) => {
+  public async  updateTerm (req: Requst, res: Response)  {
     try {
       const term_id = req.params.id; // term_id
       const { isAgree } = req.body;
@@ -181,7 +135,7 @@ module.exports = {
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
       // -> 내 권한 확인된 상태 -> 바로 정보만 반환해주면됨
-      await agreeTerm(term_id, isAgree, user_id);
+      await userQuery.agreeTerm(term_id, isAgree, user_id);
       return res
         .status(200)
         .send(new ResponseDto(200, "내 약관 동의 수정 성공"));
@@ -192,7 +146,7 @@ module.exports = {
   },
 
   // 배송지 조회
-  getUserAddress: async (req, res) => {
+  public async getUserAddress(req, res)  {
     try {
       const user_id = req.user.id;
       // 권한 검사
@@ -204,7 +158,7 @@ module.exports = {
       }
 
       // 주소 리스트 반환
-      const address = await findAllUserAddress(user_id);
+      const address = await userQuery.findAllUserAddress(user_id);
       return res
         .status(200)
         .send(new ResponseDto(200, "배송지 리스트 조회", address));
@@ -214,13 +168,13 @@ module.exports = {
   },
 
   // 배송지 id로 조회
-  getUserAddressById: async (req, res) => {
+  public async getUserAddressById (req, res) {
     try {
     } catch (error) {}
   },
 
   // 배송지 등록
-  createUserAddress: async (req, res) => {
+  public async createUserAddress (req, res) {
     try {
       const user_id = req.user.id;
       // 권한 검사
@@ -233,11 +187,11 @@ module.exports = {
       // 기본 배송지로 저장 체크했는지 확인
       if (req.body.status == 1) {
         // 기존 배송지를 찾아서 일반으로 바꿈
-        await updateExDefaultAddress(user_id);
+        await userQuery.updateExDefaultAddress(user_id);
       }
 
       // 주소 삽입
-      const address = await createUserAddress(req.body);
+      const address = await userQuery.createUserAddress(req.body);
       return res.status(200).send(new ResponseDto(200, "배송지 생성 성공"));
     } catch (error) {
       return res.status(500).json(error.message);
@@ -245,7 +199,7 @@ module.exports = {
   },
 
   // 배송지 수정
-  updateUserAddress: async (req, res) => {
+  public async updateUserAddress (req, res) {
     try {
       const user_id = req.user.id;
       const address_id = req.params.id;
@@ -255,7 +209,7 @@ module.exports = {
           .status(req.user.code)
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
-      const isExist = await findUserAddressById(address_id, user_id);
+      const isExist = await userQuery.findUserAddressById(address_id, user_id);
       if (!isExist) {
         return res
           .status(404)
@@ -265,19 +219,19 @@ module.exports = {
       // 일반배송지 -> 기본배송지
       if (req.body.status == 1 && isExist.status == 0) {
         // 기존 배송지를 찾아서 일반으로 바꿈
-        await updateExDefaultAddress(user_id);
+        await userQuery.updateExDefaultAddress(user_id);
       }
 
       // 주소 수정
-      await updateUserAddress(id, req.body);
+      await userQuery.updateUserAddress(id, req.body);
       return res.status(200).send(new ResponseDto(200, "배송지 수정 성공"));
     } catch (error) {
       return res.status(500).json(error.message);
     }
-  },
+  }
 
   // 배송지 삭제
-  deleteUserAddress: async (req, res) => {
+  public async deleteUserAddress (req, res) {
     try {
       const address_id = req.params.id;
       const user_id = req.user.id;
@@ -287,7 +241,7 @@ module.exports = {
           .status(req.user.code)
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
-      const isExist = await findUserAddressById(address_id, user_id);
+      const isExist = await userQuery.findUserAddressById(address_id, user_id);
       if (!isExist) {
         return res
           .status(404)
@@ -297,18 +251,18 @@ module.exports = {
       // 기본 배송지 삭제하는 경우
       if (isExist.status == 1) {
         // 제일 최근 수정 배송지를 기본으로 등록
-        await updateNewDefaultAddress(address_id);
+        await userQuery.updateNewDefaultAddress(address_id);
       }
 
-      await deleteUserAddress(address_id, user_id);
+      await userQuery.deleteUserAddress(address_id, user_id);
       return res.status(200).send(new ResponseDto(200, "배송지 삭제 성공"));
     } catch (error) {
       return res.status(500).json(error.message);
     }
-  },
+  }
 
   // 사용자가 동의/비동의한 약관 전체 조회 (유저인증 필요)
-  getTerms: async (req, res) => {
+  public async getTerms(req, res)  {
     try {
       const user_id = req.user.id;
       // 권한 검사
@@ -318,7 +272,7 @@ module.exports = {
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
 
-      const userTerms = await findAllUserTerms(user_id);
+      const userTerms = await userQuery.findAllUserTerms(user_id);
       return res
         .status(200)
         .send(new ResponseDto(200, "약관 조회 성공", userTerms));
@@ -328,7 +282,7 @@ module.exports = {
     }
   },
   // 사용자가 동의/비동의한 약관 id로 조회 (유저인증 필요)
-  getTerm: async (req: Request, res: Response) => {
+  public async getTerm (req: Request, res: Response)  {
     try {
       const user_id = req.user.id;
       const term_id = req.params.id;
@@ -339,38 +293,38 @@ module.exports = {
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
 
-      const term = await findByTermId(user_id, term_id);
+      const term = await userQuery.findByTermId(user_id, term_id);
       return res.status(200).send(new ResponseDto(200, "약관 조회 성공", term));
     } catch (err) {
       console.log(err);
       return res.status(500).send(err.message);
     }
-  },
+  }
   // 로컬 회원가입
-  signUp: async (req, res) => {
+  public async signUp (req, res) {
     try {
       const userReq = req.body;
       const termReq = req.body.terms;
 
       //회원 정보 insert
-      const insertId = await createLocalUser(userReq, termReq);
+      const insertId = await userQuery.createLocalUser(userReq, termReq) 
       return res
         .status(201)
         .send(new ResponseDto(201, "회원가입 성공", { id: insertId }));
     } catch (error) {
       return res.status(500).json(error.message);
     }
-  },
+  }
 
   //이메일 유효성 인증(로컬 회원가입 시)
-  emailValid_signUp: async (req, res) => {
+  public async emailValid_signUp (req, res) {
     try {
       const email = req.body.email;
       const subject = "Avatye 이메일 인증";
       const verificationCode = generateVerificationCode(); //인증코드 생성
 
       //1. email db에 존재하는지 확인
-      const emailExists = await findByEmail(email);
+      const emailExists = await userQuery.findByEmail(email);
       if (emailExists) {
         return res
           .status(409)
@@ -394,26 +348,28 @@ module.exports = {
       const info = await transporter.sendMail(mailOptions); //이메일 전송
       console.log("Email sent: " + info.response);
 
-      return res.status(201).send(
-        new ResponseDto(201, "이메일 인증 전송 성공", {
-          email: email,
-          verificationCode: verificationCode,
-        })
-      );
+      return res
+        .status(201)
+        .send(
+          new ResponseDto(201, "이메일 인증 전송 성공", {
+            email: email,
+            verificationCode: verificationCode,
+          })
+        );
     } catch (error) {
       return res.status(500).json(error.message);
     }
-  },
+  }
 
   //이메일 유효성 인증(비밀번호 변경 시)
-  emailValid_updatePwdByDB: async (req, res) => {
+  public async emailValid_updatePwdByDB (req, res) {
     try {
       const email = req.body.email;
       const subject = "Avatye 이메일 인증";
       const verificationCode = generateVerificationCode(); //인증코드 생성
 
       //1. email db에 존재하는지 확인
-      const emailExists = await findByEmail(email);
+      const emailExists = await userQuery.findByEmail(email);
       if (!emailExists) {
         return res
           .status(401)
@@ -431,16 +387,18 @@ module.exports = {
       const info = await transporter.sendMail(mailOptions); //이메일 전송
       console.log("Email sent: " + info.response);
 
-      return res.status(201).send(
-        new ResponseDto(201, "이메일 인증 전송 성공", {
-          email: email,
-          verificationCode: verificationCode,
-        })
-      );
+      return res
+        .status(201)
+        .send(
+          new ResponseDto(201, "이메일 인증 전송 성공", {
+            email: email,
+            verificationCode: verificationCode,
+          })
+        );
     } catch (error) {
       return res.status(500).json(error.message);
     }
-  },
+  }
 
   //내 프로필 수정
   // updateMyUsers: async (req, res) => {
@@ -462,7 +420,7 @@ module.exports = {
   // },
 
   //내 정보 수정
-  updateMyUserDetails: async (req, res) => {
+  public async updateMyUserDetails (req, res) {
     try {
       const userReq = req.body;
       // 권한 검사
@@ -477,10 +435,10 @@ module.exports = {
     } catch (error) {
       return res.status(500).json(error.message);
     }
-  },
+  }
 
   // 비밀번호 변경 ( 로그인한 상태에서 )
-  updatePwdByLogin: async (req, res) => {
+  public async updatePwdByLogin (req, res) {
     try {
       const userReq = req.body;
 
@@ -507,15 +465,15 @@ module.exports = {
     } catch (err) {
       return res.status(500).json(err.message);
     }
-  },
+  }
 
   // 비밀번호 찾기 ( 로그인 X )
-  updatePwdByDB: async (req, res) => {
+  public async updatePwdByDB (req, res) {
     try {
       const userReq = req.body;
 
       //2. 이메일 해당하는 pwd 찾기
-      const UserEmail = await findByEmail(userReq.email);
+      const UserEmail = await userQuery.findByEmail(userReq.email);
       if (!UserEmail) {
         return res
           .status(401)
@@ -534,15 +492,15 @@ module.exports = {
           );
       }
 
-      const updatedPwd = await updatePwd(UserEmail.user_id, userReq.newPwd);
+      const updatedPwd = await userQuery.updatePwd(UserEmail.user_id, userReq.newPwd);
       return res.status(200).send(new ResponseDto(200, "비밀번호 변경 성공"));
     } catch (err) {
       return res.status(500).json(err.message);
     }
-  },
+  }
 
   // 회원 탈퇴
-  deleteUser: async (req, res) => {
+  public async deleteUser (req, res)  {
     try {
       const reason_text = req.body.reason_text;
       // 권한 검사
@@ -551,43 +509,14 @@ module.exports = {
           .status(req.user.code)
           .send(new ResponseDto(req.user.code, req.user.msg));
       }
-      const isDeleted = await deleteUser(req.user.id, reason_text);
+      const isDeleted = await userQuery.deleteUser(req.user.id, reason_text);
       return res.status(200).send(new ResponseDto(200, "회원 탈퇴 완료"));
     } catch (err) {
       console.log(err);
       return res.status(500).json(err.message);
     }
-  },
-
-  // // 내 계정 조회 (로컬, 소셜)
-  // getMyAccount: async (req: Requst, res: Response) => {
-  //   try {
-  //     const user_id = req.user.id; // usertbl
-  //     if (user_id == null) {
-  //       return res
-  //         .status(req.user.code)
-  //         .send(new ResponseDto(req.user.code, req.user.msg));
-  //     }
-  //     // 로컬 유저면
-  //     if (req.user.login_type == "LOCAL") {
-  //       const localUser = await findLocalById(user_id);
-  //       return res
-  //         .status(200)
-  //         .send(new ResponseDto(200, "내 계정 조회 성공", localUser));
-  //     }
-
-  //     if (req.user.login_type == "SOCIAL") {
-  //       const socialUser = await findSocialById(user_id);
-  //       return res
-  //         .status(200)
-  //         .send(new ResponseDto(200, "내 계정 조회 성공", socialUser));
-  //     }
-  //   } catch (err) {
-  //     console.log(err);
-  //     return res.status(500).send(err.message);
-  //   }
-  // },
-};
+  }
+}
 
 // 토큰 만들기
 const generateJWTToken = async (id, role) => {
@@ -607,3 +536,6 @@ const generateVerificationCode = () => {
   }
   return code;
 };
+
+export default new UserController();
+

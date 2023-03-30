@@ -1,19 +1,10 @@
-const {
-  findAllUser,
-  findUserInfoById,
-  findSocialById,
-  findLocalById,
-  findById,
-  updateUserRole,
-} = require("../../database/user.query");
-const ResponseDto = require("../model/ResponseDto");
 
-module.exports = {
+class AdminController {
   // 관리자로컬 로그인
   // local login passport 실행후 user 반환
-  adminSignIn: async (req: Request, res: Response) => {
+  public async adminSignIn(req: Request, res: Response): Promise<Response>  {
     try {
-      const admin = req.user; // usertbl
+      const admin = req.user
       // 로그인 실패시 에러 반환
       if (admin.id == null) {
         return res
@@ -29,9 +20,9 @@ module.exports = {
     } catch (err) {
       return res.status(500).json(err.message);
     }
-  },
+  }
   // 유저 목록 조회
-  getUsers: async (req: Request, res: Response) => {
+  public async getUsers(req: Request, res: Response) {
     try {
       // 권한 검사
       const admin = req.user;
@@ -49,10 +40,10 @@ module.exports = {
       console.log(err);
       return res.status(500).send(err.message);
     }
-  },
+  }
 
   // 유저 계정 조회
-  getUserAccount: async (req: Request, res: Response) => {
+  public async getUserAccount(req: Request, res: Response) {
     try {
       const user_id = req.params.id;
 
@@ -80,10 +71,10 @@ module.exports = {
       console.log(err);
       return res.status(500).send(err.message);
     }
-  },
+  }
 
   // 유저 상제 정보 id로 조회
-  getUserInfo: async (req: Request, res: Response) => {
+  public async getUserInfo(req: Request, res: Response) {
     try {
       const user_id = req.params.id;
       // 권한 검사
@@ -111,10 +102,10 @@ module.exports = {
       console.log(err);
       return res.status(500).send(err.message);
     }
-  },
+  }
 
   // 유저 권한 바꾸기
-  updateUserRole: async (req: Request, res: Response) => {
+  public async updateUserRole(req: Request, res: Response) {
     try {
       const user_id = req.params.id;
       const { role } = req.body;
@@ -143,5 +134,7 @@ module.exports = {
       console.log(err);
       return res.status(500).send(err.message);
     }
-  },
-};
+  }
+}
+
+export default new AdminController();

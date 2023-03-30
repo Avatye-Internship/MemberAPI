@@ -29,3 +29,13 @@ app.use("/api", router);
 app.listen(3000, () => {
   console.log("----server on------");
 });
+
+// -------------------------------------
+// var restify = require('restify')
+// // 서버 생성
+// var server = restify.createServer();
+// server.use(restify.cor)
+// server.use("/api", router)
+// server.listen(3000, function() {
+//   console.log('server on', server.url)
+// });
