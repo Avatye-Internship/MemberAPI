@@ -1,15 +1,14 @@
-import passportts from "passport";
 import { ExtractJwt } from "passport-jwt";
 import { Strategy as JWTStrategy } from "passport-jwt";
 import { Strategy as LocalStrategy } from "passport-local";
 import { Strategy as KakaoStrategy } from "passport-kakao";
 import userQuery from "../../database/user.query";
 import bcrypt from "bcrypt";
-// const JWTStrategy = passportJwt.Strategy;
-// const LocalStrategy = passportLocal.Strategy;
-// const KakaoStrategy = passportKakao.Strategy;
-
+import passport from "passport";
+import Users from "../model/Users";
+import { PassportUserDto } from "../model/ReqDto";
 require("dotenv").config();
+
 // 로그인
 const passportConfig = {
   usernameField: "email",
@@ -24,33 +23,40 @@ const UserLoginVerify = async (
   try {
     const email = username;
     const pwd = password;
-
     // 1. 입력된 이메일로 유저 객체 가져오기
-    const user = await userQuery.findByEmail(email); // userstbl
+    const user: Users = await userQuery.findByEmail(email); // userstbl
     // 해당 이메일가 없다면 에러
     if (!user) {
-      return done(null, { code: 404, msg: "존재하지 않는 이메일" });
+      return done(null, new PassportUserDto(null, 404, "존재하지 않는 이메일"));
     }
     // 2. 일반 회원인지 확인
     if (user.role == "ADMIN") {
-      return done(null, {
-        code: 400,
-        msg: "관리자로 가입된 회원입니다. 관리자 탭에서 다시 로그인해주세요",
-      });
+      return done(
+        null,
+        new PassportUserDto(
+          null,
+          400,
+          "관리자로 가입된 회원입니다. 관리자 탭에서 다시 로그인해주세요"
+        )
+      );
     }
     // 3. 로컬로그인으로 요청했는데 로컬이 아니라 다른걸로 가입된 유저라면
     if (user.login_type != "LOCAL") {
-      return done(null, {
-        code: 400,
-        msg: `${user.login_type}로 로그인된 유저입니다. ${user.login_type}로 로그인하세요`,
-      });
+      return done(
+        null,
+        new PassportUserDto(
+          null,
+          400,
+          `${user.login_type}로 로그인된 유저입니다. ${user.login_type}로 로그인하세요`
+        )
+      );
     }
     // 4. 유저 있으면 해쉬된 비밀번호 비교
     const isSame = await bcrypt.compare(pwd, user.pwd);
 
     // 비번 같으면 로그인 성공
     if (isSame) {
-      return done(null, user);
+      return done(null, new PassportUserDto(user));
     } else {
       return done(null, { code: 400, msg: "올바르지 않은 비밀번호" });
     }
@@ -70,11 +76,12 @@ const AdminLoginVerify = async (
     const pwd = password;
 
     // 1. 입력된 이메일로 유저 객체 가져오기
-    const user = await userQuery.findByEmail(email); // userstbl
+    const user: Users = await userQuery.findByEmail(email); // userstbl
     // 해당 이메일가 없다면 에러
     if (!user) {
       return done(null, { code: 404, msg: "존재하지 않는 이메일" });
     }
+
     // 2. 관리자인지 확인
     if (user.role == "USER") {
       return done(null, {
@@ -113,7 +120,7 @@ const JWTConfig = {
 const UserJWTVerify = async (payload: any, done: any) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await userQuery.findById(payload.id); // usertbl
+    const user: Users = await userQuery.findById(payload.id); // usertbl
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       return done(null, user);
@@ -129,7 +136,7 @@ const UserJWTVerify = async (payload: any, done: any) => {
 const AdminJWTVerify = async (payload: any, done: any) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await userQuery.findById(payload.id);
+    const user: Users = await userQuery.findById(payload.id);
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       // 관리자만 접근 가능
@@ -170,7 +177,7 @@ const KakaoVerify = async (
     const profileJson = profile._json;
     const kakao_account = profileJson.kakao_account;
     // 1. 입력된 이메일로 유저 객체 가져오기
-    const exUser = await userQuery.findByEmail(kakao_account.email);
+    const exUser: Users = await userQuery.findByEmail(kakao_account.email);
 
     // 2. 카카오로그인으로 요청했는데 카카오가 아니라 다른걸로 가입된 유저라면
     if (exUser.login_type != "KAKAO") {
@@ -198,16 +205,16 @@ const KakaoVerify = async (
   }
 };
 
-passportts.use(
-  "local-user",
-  new LocalStrategy(passportConfig, UserLoginVerify)
-);
-passportts.use(
-  "local-admin",
-  new LocalStrategy(passportConfig, AdminLoginVerify)
-);
-passportts.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
-passportts.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
-passportts.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
-
-export default passportts;
+export default function passportfunc() {
+  passport.use(
+    "local-user",
+    new LocalStrategy(passportConfig, UserLoginVerify)
+  );
+  passport.use(
+    "local-admin",
+    new LocalStrategy(passportConfig, AdminLoginVerify)
+  );
+  passport.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
+  passport.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
+  passport.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
+}
