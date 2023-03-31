@@ -2,14 +2,14 @@ import bcrypt from "bcrypt";
 import Address from "../api/model/Address";
 import { SignUpDto, SocialLoginDto } from "../api/model/ReqDto";
 import Terms from "../api/model/Terms";
-import { Role } from "../api/model/Users";
+import Users, { Role } from "../api/model/Users";
 import User_Details from "../api/model/User_Details";
 import User_Term from "../api/model/User_Term";
 import db from "./pool";
 
 class UserQuery {
   //회원가입
-  public async createLocalUser(signupDto: SignUpDto) {
+  public async createLocalUser(signupDto: SignUpDto):Promise<number>{
     const { email, pwd, name, gender, birth, nickname, profile_img,terms } = signupDto;
     const hashed = await bcrypt.hash(pwd, 10);
     const conn = await db.getConnection(); //트랜잭션 연결
@@ -34,14 +34,14 @@ class UserQuery {
     } catch (err) {
       console.log(err);
       await conn.rollback(); // 롤백
-      return res.status(500).json(err);
+      return -1; //에러
     } finally {
       conn.release(); // conn 회수
     }
   }
 
   //약관동의 등록
-  public async termsIsRequired(terms:User_Term[], userId:number) {
+  public async termsIsRequired(terms:User_Term[], userId:number):Promise<void>{
     let terms_register_query = `INSERT INTO user_termtbl (term_id,isAgree,user_id) VALUES`;
 
     //약관동의별 insert 쿼리문 추가
@@ -56,7 +56,7 @@ class UserQuery {
   }
 
   //이메일 조회
-  public async findByEmail(email:string) {
+  public async findByEmail(email:string):Promise<Users> {
     return db
       .query("select * from userstbl where email=? and active=1", [email])
       .then((data:any) => data[0][0]);
@@ -109,7 +109,7 @@ class UserQuery {
   // };
 
   //내 정보 수정(UserDetailstbl)
-  public async updateUserDetails(id:number, users:User_Details) {
+  public async updateUserDetails(id:number, users:User_Details):Promise<User_Details>{
     let user_update_query = `UPDATE User_Detailstbl SET `;
 
     for (let i = 0; i < Object.keys(users).length; i++) {
@@ -126,8 +126,9 @@ class UserQuery {
     });
   }
   //비밀번호 변경
-  public async updatePwd(id:number, pwd:string) {
+  public async updatePwd(id:number, pwd:string) :Promise<Users>{
     const hashed = await bcrypt.hash(pwd, 10);
+
     return await db
       .query("update Userstbl set pwd=? where user_id=?", [hashed, id])
       .then((data:any) => {
@@ -135,7 +136,7 @@ class UserQuery {
       });
   }
   //회원 탈퇴
-  public async deleteUser(id:number) {
+  public async deleteUser(id:number) :Promise<Users>{
     return db
       .query("UPDATE Userstbl set active=0, deleted_at=NOW() where user_id=?", [
         id,
@@ -143,7 +144,7 @@ class UserQuery {
       .then((data:any) => data[0][0]);
   }
 
-  public async findAllUser() {
+  public async findAllUser() :Promise<Users>{
     const users = await db.query(
       "select id, user_grade_id, login_type, email, created_at, updated_at, active, deleted_at, role from userstbl"
     );
