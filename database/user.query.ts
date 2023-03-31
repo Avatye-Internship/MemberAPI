@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import db from "./db";
+import db from "./pool";
 
 class UserQuery {
   //회원가입
@@ -28,7 +28,7 @@ class UserQuery {
     } catch (err) {
       console.log(err);
       await conn.rollback(); // 롤백
-      return res.status(500).json(err);
+      return err;
     } finally {
       conn.release(); // conn 회수
     }
@@ -51,7 +51,7 @@ class UserQuery {
 
   //이메일 조회
   public async findByEmail(email) {
-    return db
+    return await db
       .query("select * from userstbl where email=? and active=1", [email])
       .then((data) => data[0][0]);
   }
@@ -106,7 +106,7 @@ class UserQuery {
   public async updateUserDetails(id, users) {
     let user_update_query = `UPDATE User_Detailstbl SET `;
 
-    for (i = 0; i < Object.keys(users).length; i++) {
+    for (let i = 0; i < Object.keys(users).length; i++) {
       user_update_query += `${Object.keys(users)[i]} = '${
         Object.values(users)[i]
       }',`;
@@ -250,7 +250,7 @@ class UserQuery {
     for (let i = 0; i < term_result.length; i++) {
       //약관동의 필수 여부에 따른 에러
       i;
-      terms_register_query += `('${terms_result[i].id}','true',NOW(),'${userId}',NOW()),`;
+      terms_register_query += `('${term_result[i].id}','true',NOW(),'${userId}',NOW()),`;
     }
     terms_register_query =
       terms_register_query.substring(0, terms_register_query.length - 1) + ";";
@@ -267,7 +267,7 @@ class UserQuery {
   }
 
   //
-  public async findBySocialId(id, provider) {
+  public async findBySocialId(id, login_type) {
     return db
       .query("select * from socialtbl where sns_id=? and provider=?", [
         id,
