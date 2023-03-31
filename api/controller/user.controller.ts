@@ -32,7 +32,7 @@ class UserController {
   }
 
   // 소셜 로그인
-  public async socialLogin(req: any, res: any) {
+  public async socialLogin(req: any, res: any, next: any) {
     try {
       const user = req.user; // socialtbl
       // 로그인 실패시 에러 반환

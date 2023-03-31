@@ -1,32 +1,29 @@
-import passport from "passport";
 import { userController } from "../controller/user.controller";
 import { adminController } from "../controller/admin.controller";
 import { Router } from "restify-router";
+import passportts from "passport";
+passportts;
 
 var userRouter = new Router();
 
-const requireUserSignIn = passport.authenticate("local-user", {
+const requireUserSignIn = passportts.authenticate("local-user", {
   session: false,
 });
 
-const requireAdminSignIn = passport.authenticate("local-admin", {
+const requireAdminSignIn = passportts.authenticate("local-admin", {
   session: false,
 });
 // 사용자만 접근 가능한 api에 달아주는 passport
-const requireUserAuth = passport.authenticate("jwt-user", {
+const requireUserAuth = passportts.authenticate("jwt-user", {
   session: false,
 });
 
 // 관리자만 접근 가능한 api에 달아주는 passport
-const requireAdminAuth = passport.authenticate("jwt-admin", {
+const requireAdminAuth = passportts.authenticate("jwt-admin", {
   session: false,
 });
 
-const requireKakao = passport.authenticate("kakao", { session: false });
-
-userRouter.get("/test", requireAdminAuth, function (req, res, next) {});
-
-userRouter.post("/test", requireAdminAuth, function (req, res, next) {});
+const requireKakao = passportts.authenticate("kakao", { session: false });
 
 /*
     관리자 API
@@ -46,7 +43,7 @@ userRouter.get(
   requireAdminAuth,
   adminController.getUserAccount
 );
-
+console.log(userRouter);
 // 회원 정보 상세 조회
 userRouter.get(
   "/admin/users/info/:id",

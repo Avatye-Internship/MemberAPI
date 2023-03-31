@@ -1,14 +1,13 @@
-import passport from "passport";
+import passportts from "passport";
 import { ExtractJwt } from "passport-jwt";
-import passportJwt from "passport-jwt";
-import passportLocal from "passport-local";
-import passportKakao from "passport-kakao";
+import { Strategy as JWTStrategy } from "passport-jwt";
+import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as KakaoStrategy } from "passport-kakao";
 import userQuery from "../../database/user.query";
 import bcrypt from "bcrypt";
-import { Passport } from "passport";
-const JWTStrategy = passportJwt.Strategy;
-const LocalStrategy = passportLocal.Strategy;
-const KakaoStrategy = passportKakao.Strategy;
+// const JWTStrategy = passportJwt.Strategy;
+// const LocalStrategy = passportLocal.Strategy;
+// const KakaoStrategy = passportKakao.Strategy;
 
 require("dotenv").config();
 // 로그인
@@ -199,13 +198,16 @@ const KakaoVerify = async (
   }
 };
 
-passport.use("local-user", new LocalStrategy(passportConfig, UserLoginVerify));
-passport.use(
+passportts.use(
+  "local-user",
+  new LocalStrategy(passportConfig, UserLoginVerify)
+);
+passportts.use(
   "local-admin",
   new LocalStrategy(passportConfig, AdminLoginVerify)
 );
-passport.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
-passport.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
-passport.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
+passportts.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
+passportts.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
+passportts.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
 
-export { passport };
+export default passportts;
