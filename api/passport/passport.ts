@@ -1,22 +1,13 @@
-// const bcrypt = require("bcrypt");
-// const jwt = require("jsonwebtoken");
-// const {
-//   findById,
-//   findLocalById,
-//   findByEmail,
-//   findBySocialId,
-//   createSocialUser,
-
-// } = require("../../database/user.query");
-
-import passport from "passport";
+import passportts from "passport";
 import { ExtractJwt } from "passport-jwt";
-import passportJwt from "passport-jwt";
-import passportLocal from "passport-local";
-import passportKakao from "passport-kakao";
-const JWTStrategy = passportJwt.Strategy;
-const LocalStrategy = passportLocal.Strategy;
-const KakaoStrategy = passportKakao.Strategy;
+import { Strategy as JWTStrategy } from "passport-jwt";
+import { Strategy as LocalStrategy } from "passport-local";
+import { Strategy as KakaoStrategy } from "passport-kakao";
+import userQuery from "../../database/user.query";
+import bcrypt from "bcrypt";
+// const JWTStrategy = passportJwt.Strategy;
+// const LocalStrategy = passportLocal.Strategy;
+// const KakaoStrategy = passportKakao.Strategy;
 
 require("dotenv").config();
 // 로그인
@@ -25,13 +16,17 @@ const passportConfig = {
   passwordField: "pwd",
 };
 
-const UserLoginVerify = async (username: string, password: string, done) => {
+const UserLoginVerify = async (
+  username: string,
+  password: string,
+  done: any
+) => {
   try {
     const email = username;
     const pwd = password;
 
     // 1. 입력된 이메일로 유저 객체 가져오기
-    const user = await findByEmail(email); // userstbl
+    const user = await userQuery.findByEmail(email); // userstbl
     // 해당 이메일가 없다면 에러
     if (!user) {
       return done(null, { code: 404, msg: "존재하지 않는 이메일" });
@@ -61,17 +56,21 @@ const UserLoginVerify = async (username: string, password: string, done) => {
     }
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error.message });
+    return done(null, { code: 401, msg: error });
   }
 };
 
-const AdminLoginVerify = async (username, password, done) => {
+const AdminLoginVerify = async (
+  username: string,
+  password: string,
+  done: any
+) => {
   try {
     const email = username;
     const pwd = password;
 
     // 1. 입력된 이메일로 유저 객체 가져오기
-    const user = await findByEmail(email); // userstbl
+    const user = await userQuery.findByEmail(email); // userstbl
     // 해당 이메일가 없다면 에러
     if (!user) {
       return done(null, { code: 404, msg: "존재하지 않는 이메일" });
@@ -101,7 +100,7 @@ const AdminLoginVerify = async (username, password, done) => {
     }
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error.message });
+    return done(null, { code: 401, msg: error });
   }
 };
 
@@ -111,10 +110,10 @@ const JWTConfig = {
   secretOrKey: process.env.JWT_SECRET, // 암호 키 입력
 };
 
-const UserJWTVerify = async (payload, done) => {
+const UserJWTVerify = async (payload: any, done: any) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await findById(payload.id); // usertbl
+    const user = await userQuery.findById(payload.id); // usertbl
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       return done(null, user);
@@ -123,14 +122,14 @@ const UserJWTVerify = async (payload, done) => {
     return done(null, { code: 401, msg: "인증되지 않은 회원" });
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error.message });
+    return done(null, { code: 401, msg: error });
   }
 };
 
-const AdminJWTVerify = async (payload, done) => {
+const AdminJWTVerify = async (payload: any, done: any) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
-    const user = await findById(payload.id);
+    const user = await userQuery.findById(payload.id);
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       // 관리자만 접근 가능
@@ -151,7 +150,7 @@ const AdminJWTVerify = async (payload, done) => {
     }
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error.message });
+    return done(null, { code: 401, msg: error });
   }
 };
 
@@ -161,12 +160,17 @@ const KakaoConfig = {
   callbackURL: "http://localhost:3000/api/users/login/kakao/callback",
 };
 
-const KakaoVerify = async (accessToken, refreshToken, profile, done) => {
+const KakaoVerify = async (
+  accessToken: any,
+  refreshToken: any,
+  profile: any,
+  done: any
+) => {
   try {
     const profileJson = profile._json;
     const kakao_account = profileJson.kakao_account;
     // 1. 입력된 이메일로 유저 객체 가져오기
-    const exUser = await findByEmail(kakao_account.email);
+    const exUser = await userQuery.findByEmail(kakao_account.email);
 
     // 2. 카카오로그인으로 요청했는데 카카오가 아니라 다른걸로 가입된 유저라면
     if (exUser.login_type != "KAKAO") {
@@ -180,7 +184,7 @@ const KakaoVerify = async (accessToken, refreshToken, profile, done) => {
       done(null, exUser);
     } else {
       // 새로 가입
-      const newSocial = await createSocialUser({
+      const newSocial = await userQuery.createSocialUser({
         login_type: "KAKAO",
         email: kakao_account.email,
         open_id: profileJson.id,
@@ -190,15 +194,20 @@ const KakaoVerify = async (accessToken, refreshToken, profile, done) => {
     }
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error.message });
+    return done(null, { code: 401, msg: error });
   }
 };
 
-passport.use("local-user", new LocalStrategy(passportConfig, UserLoginVerify));
-passport.use(
+passportts.use(
+  "local-user",
+  new LocalStrategy(passportConfig, UserLoginVerify)
+);
+passportts.use(
   "local-admin",
   new LocalStrategy(passportConfig, AdminLoginVerify)
 );
-passport.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
-passport.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
-passport.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
+passportts.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
+passportts.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
+passportts.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
+
+export default passportts;

@@ -7,6 +7,7 @@ import Terms from "../api/model/Terms";
 import Users, { Role } from "../api/model/Users";
 import User_Details from "../api/model/User_Details";
 import User_Term from "../api/model/User_Term";
+
 import db from "./pool";
 
 class UserQuery {
@@ -36,6 +37,7 @@ class UserQuery {
     } catch (err) {
       console.log(err);
       await conn.rollback(); // 롤백
+
       return -1; //에러
     } finally {
       conn.release(); // conn 회수
@@ -58,6 +60,7 @@ class UserQuery {
   }
 
   //이메일 조회
+
   public async findByEmail(email:string):Promise<Users> {
     return await db
       .query("select * from userstbl where email=? and active=1", [email])
@@ -263,6 +266,7 @@ class UserQuery {
   }
 
   //
+
   // public async findBySocialId(id:number, provider) {
   //   return db
   //     .query("select * from socialtbl where sns_id=? and provider=?", [
