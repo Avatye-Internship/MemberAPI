@@ -1,29 +1,28 @@
 import { userController } from "../controller/user.controller";
 import { adminController } from "../controller/admin.controller";
-import { Router } from "restify-router";
-import passportts from "passport";
-passportts;
+import express from "express";
+import passport from "passport";
 
-var userRouter = new Router();
+const userRouter = express.Router();
 
-const requireUserSignIn = passportts.authenticate("local-user", {
+const requireUserSignIn = passport.authenticate("local-user", {
   session: false,
 });
 
-const requireAdminSignIn = passportts.authenticate("local-admin", {
+const requireAdminSignIn = passport.authenticate("local-admin", {
   session: false,
 });
 // 사용자만 접근 가능한 api에 달아주는 passport
-const requireUserAuth = passportts.authenticate("jwt-user", {
+const requireUserAuth = passport.authenticate("jwt-user", {
   session: false,
 });
 
 // 관리자만 접근 가능한 api에 달아주는 passport
-const requireAdminAuth = passportts.authenticate("jwt-admin", {
+const requireAdminAuth = passport.authenticate("jwt-admin", {
   session: false,
 });
 
-const requireKakao = passportts.authenticate("kakao", { session: false });
+const requireKakao = passport.authenticate("kakao", { session: false });
 
 /*
     관리자 API
@@ -43,7 +42,6 @@ userRouter.get(
   requireAdminAuth,
   adminController.getUserAccount
 );
-console.log(userRouter);
 // 회원 정보 상세 조회
 userRouter.get(
   "/admin/users/info/:id",
@@ -135,7 +133,7 @@ userRouter.put(
   userController.updateUserAddress
 );
 // 내 주소 삭제
-userRouter.del(
+userRouter.delete(
   "/users/address",
   requireUserAuth,
   userController.deleteUserAddress
