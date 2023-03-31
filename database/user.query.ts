@@ -59,8 +59,7 @@ class UserQuery {
 
   //이메일 조회
   public async findByEmail(email:string):Promise<Users> {
-    return await db
-      .query("select * from userstbl where email=? and active=1", [email])
+    return await db.query("select * from userstbl where email=? and active=1", [email])
       .then((data:any) => data[0][0]);
   }
 
