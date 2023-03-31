@@ -5,14 +5,14 @@ import User_Details from "./User_Details";
 import User_Term from "./User_Term";
 
 export class SignUpDto {
-    email:string;
-    pwd:string;
-    name:string;
-    gender:string;
-    birth:string;
-    nickname:string;
-    profile_img:string;
-    terms:User_Term[];
+    email;
+    pwd;
+    name;
+    gender;
+    birth;
+    nickname;
+    profile_img;
+    terms;
 
     constructor(users:Users,userdetail:User_Details,userterm:User_Term[]) {
         this.email=users.email,
@@ -38,4 +38,25 @@ export class SocialLoginDto{
         this.login_type=users.login_type,
         this.nickname=userdetail.nickname
     }
+}
+
+export class PassportUserDto{
+    users;
+    code;
+    msg;
+    constructor(users:Users,code:number,msg:string) {
+        this.users=users,
+        this.code=code,
+        this.msg=msg
+    }
+}
+
+export interface updatePwdByDBDto{
+    email:string,
+    newPwd:string
+}
+
+export interface updatePwdByLoginDto{
+    oldPwd:string,
+    newPwd:string
 }
