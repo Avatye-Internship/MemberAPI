@@ -1,11 +1,12 @@
 import "dotenv/config";
 import userQuery from "../../database/user.query";
-import ResponseDto from "../model/ResponseDto";
+
 import * as jwt from "jsonwebtoken";
 import bcrypt from "bcrypt";
 import { Response } from "restify";
 import nodemailer from "nodemailer";
 import smtpTransport from "nodemailer-smtp-transport";
+import ResponseDto from "../model/ResponseDto";
 
 class UserController {
   // 로컬 로그인
@@ -15,7 +16,6 @@ class UserController {
       const user = req.user; // usertbl
       // 로그인 실패시 에러 반환
       if (user.user_id == null) {
-        return;
         return res.send(user.code, new ResponseDto(user.code, user.msg));
       } else {
         // 로그인 성공시 jwt 토큰 반환
@@ -306,10 +306,10 @@ class UserController {
   public async signUp(req: any, res: Response, next: any) {
     try {
       const userReq = req.body;
-      const termReq = req.body.terms;
+      //const termReq = req.body.terms;
 
       //회원 정보 insert
-      const insertId = await userQuery.createLocalUser(userReq, termReq);
+      const insertId = await userQuery.createLocalUser(userReq);
       return res.send(
         201,
         new ResponseDto(201, "회원가입 성공", { id: insertId })
