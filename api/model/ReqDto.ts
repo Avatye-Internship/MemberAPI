@@ -48,7 +48,10 @@ export class PassportUserDto {
   }
 }
 
-
+export interface updatePwdByLoginDto{
+  oldPwd:string,
+  newPwd:string
+}
 
 export interface updatePwdByDBDto{
     email:string,

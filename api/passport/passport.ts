@@ -27,14 +27,14 @@ const UserLoginVerify = async (
     const user: Users = await userQuery.findByEmail(email); // userstbl
     // 해당 이메일가 없다면 에러
     if (!user) {
-      return done(null, new PassportUserDto(null, 404, "존재하지 않는 이메일"));
+      return done(null, new PassportUserDto(undefined, 404, "존재하지 않는 이메일"));
     }
     // 2. 일반 회원인지 확인
     if (user.role == "ADMIN") {
       return done(
         null,
         new PassportUserDto(
-          null,
+          undefined,
           400,
           "관리자로 가입된 회원입니다. 관리자 탭에서 다시 로그인해주세요"
         )
@@ -45,7 +45,7 @@ const UserLoginVerify = async (
       return done(
         null,
         new PassportUserDto(
-          null,
+          undefined,
           400,
           `${user.login_type}로 로그인된 유저입니다. ${user.login_type}로 로그인하세요`
         )

@@ -18,9 +18,10 @@ class UserController {
   // local login passport 실행후 user 반환
   public async signIn(req: Request, res: Response, next: any) :Promise<Response>{
     try {
+    
       const passportuser:PassportUserDto = req.passportUserDto; // usertbl
       // 로그인 실패시 에러 반환
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(new ResponseDto(passportuser.code, passportuser.msg));
       } else {
         // 로그인 성공시 jwt 토큰 반환
@@ -40,7 +41,7 @@ class UserController {
     try {
       const passportuser:PassportUserDto = req.passportUserDto; // socialtbl
       // 로그인 실패시 에러 반환
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(new ResponseDto(passportuser.code, passportuser.msg));
       } else {
         // 로그인 성공시 토큰 반환
@@ -77,7 +78,7 @@ class UserController {
     try {
       //const user_id:number = req.passportUserDto.id;
       const passportuser:PassportUserDto = req.passportUserDto;
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         // usertbl
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
@@ -98,7 +99,7 @@ class UserController {
     try {
       //const user_id:number = req.passportUserDto.id; // usertbl
       const passportuser:PassportUserDto = req.passportUserDto;
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -119,7 +120,7 @@ class UserController {
     try {
       //const user_id:number = req.passportUserDto.id;
       const passportuser:PassportUserDto = req.passportUserDto;
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         // usertbl
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
@@ -142,7 +143,7 @@ class UserController {
       const isAgree:boolean = req.body;
       //const user_id:number = req.passportUserDto.id;
       const passportuser:PassportUserDto = req.passportUserDto;
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -162,7 +163,7 @@ class UserController {
       const passportuser:PassportUserDto=req.passportUserDto;
       //const user_id:number = req.passportUserDto.id;
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         //usertbl
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
@@ -190,7 +191,7 @@ class UserController {
       const address:Address = req.body;
       //const user_id:number = req.passportUserDto.id;
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -218,7 +219,7 @@ class UserController {
       const address_id:string = req.params.id;
       const address:Address = req.body;
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(new ResponseDto(passportuser.code, passportuser.msg));
       }
       const isExist:Address = await userQuery.findUserAddressById(address_id, passportuser.users.user_id);
@@ -248,7 +249,7 @@ class UserController {
       const passportuser:PassportUserDto = req.passportUserDto;
 
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(new ResponseDto(passportuser.code, passportuser.msg));
       }
       const isExist:Address = await userQuery.findUserAddressById(address_id, passportuser.users.user_id);
@@ -275,7 +276,7 @@ class UserController {
       //const user_id = req.passportUserDto.id;
       const passportuser:PassportUserDto = req.passportUserDto;
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -295,7 +296,7 @@ class UserController {
       const passportuser:PassportUserDto = req.passportUserDto;
       const term_id:string = req.params.id;
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -428,7 +429,7 @@ class UserController {
       const passportuser:PassportUserDto = req.passportUserDto;
 
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -451,7 +452,7 @@ class UserController {
       const passportuser:PassportUserDto = req.passportUserDto;
 
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
@@ -514,7 +515,7 @@ class UserController {
       const reason_text: string = req.body.reason_text;
       const passportuser:PassportUserDto = req.passportUserDto;
       // 권한 검사
-      if (passportuser.users.user_id == null) {
+      if (passportuser.users?.user_id == null) {
         return res.send(
           new ResponseDto(passportuser.code, passportuser.msg)
         );
