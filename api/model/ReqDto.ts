@@ -43,12 +43,15 @@ export class PassportUserDto {
   users;
   code;
   msg;
-  constructor(users?: Users, code?: number, msg?: string) {
+  constructor(users: Users|null, code?: number, msg?: string) {
     (this.users = users), (this.code = code), (this.msg = msg);
   }
 }
 
-
+export interface updatePwdByLoginDto{
+  oldPwd:string,
+  newPwd:string
+}
 
 export interface updatePwdByDBDto{
     email:string,

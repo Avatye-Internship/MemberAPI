@@ -46,7 +46,7 @@ class UserQuery {
 
   //약관동의 등록
   public async termsIsRequired(terms:User_Term[], userId:number):Promise<void>{
-    let terms_register_query:string = `INSERT INTO user_termtbl (term_id,isAgree,user_id) VALUES`;
+    let terms_register_query:string = `INSERT INTO user_termtbl (term_id,is_agree,user_id) VALUES`;
 
     //약관동의별 insert 쿼리문 추가
     for (let i:number = 0; i < terms.length; i++) {
