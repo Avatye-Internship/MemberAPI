@@ -4,14 +4,14 @@ import User_Details from "./User_Details";
 import User_Term from "./User_Term";
 
 export class SignUpDto {
-    email;
-    pwd;
-    name;
-    gender;
-    birth;
-    nickname;
-    profile_img;
-    terms;
+  email;
+  pwd;
+  name;
+  gender;
+  birth;
+  nickname;
+  profile_img;
+  terms;
 
   constructor(users: Users, userdetail: User_Details, userterm: User_Term[]) {
     (this.email = users.email),
@@ -43,17 +43,18 @@ export class PassportUserDto {
   users;
   code;
   msg;
+
   constructor(users: Users|null, code?: number|null, msg?: string|null) {
     (this.users = users), (this.code = code), (this.msg = msg);
   }
 }
 
-export interface updatePwdByLoginDto{
-  oldPwd:string,
-  newPwd:string
+export interface updatePwdByLoginDto {
+  oldPwd: string;
+  newPwd: string;
 }
 
-export interface updatePwdByDBDto{
-    email:string,
-    newPwd:string
+export interface updatePwdByDBDto {
+  email: string;
+  newPwd: string;
 }
