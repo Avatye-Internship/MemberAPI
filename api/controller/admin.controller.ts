@@ -10,6 +10,7 @@ export class AdminController {
     try {
       const admin = req.user;
       // 로그인 실패시 에러 반환
+      
       if (admin.id == null) {
         return res.send(new ResponseDto(admin.code, admin.msg));
       } else {
