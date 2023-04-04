@@ -124,14 +124,18 @@ class UserQuery {
   ): Promise<void> {
     let user_update_query: string = `UPDATE User_Detailstbl SET `;
 
-    for (let i: number = 0; i < Object.keys(users).length; i++) {
-      user_update_query += `${Object.keys(users)[i]} = '${
-        Object.values(users)[i]
+
+    //console.log(users.users);
+    for (let i:number = 0; i < Object.keys(users.users).length; i++) {
+      user_update_query += `${Object.keys(users.users)[i]} = '${
+        Object.values(users.users)[i]
+
       }',`;
     }
     user_update_query = user_update_query.slice(0, -1);
     user_update_query += ` WHERE user_id = '${id}';`;
-    //console.log(user_update_query);
+
+    console.log(user_update_query);
 
     db.query(user_update_query);
   }
@@ -189,8 +193,9 @@ class UserQuery {
 
   public async findUserBasicById(id: string): Promise<UserBasicDto> {
     return db
-      .query("select nickname, profile_img from userstbl where id=?", [id])
-      .then((data: any) => data[0][0]);
+      .query("select nickname, profile_img from user_detailstbl where user_id=?", [id])
+      .then((data:any) => data[0][0]);
+
   }
 
   // user, user_detail, address 모두 조회 후 반환
@@ -210,7 +215,7 @@ class UserQuery {
     // 등급, 이메일, 로그인타입, 포인트, 프로필이미지, 닉네임
     return db
       .query(
-        "select u.id, u.user_grade_id, u.email, u.login_type, ud.point, ud.profile_img, ud.nickname from userstbl u inner join user_detailtbl ud on u.id = ud.user_id",
+        "select u.user_id, u.user_grade_id,u.email, u.login_type, ud.point, ud.profile_img, ud.nickname from userstbl u inner join user_detailstbl ud on u.user_id = ud.user_id where u.user_id=?",
         [id]
       )
       .then((data: any) => data[0][0]);
@@ -227,7 +232,7 @@ class UserQuery {
       // users tbl
       const insertId: number = await db
         .query(
-          "insert into userstbl(user_grade_id, login_type, email) value(3,?, ?)",
+          "insert into userstbl(login_type, email) value(?, ?)",
           [login_type, email]
         )
         .then((data: any) => {
@@ -241,7 +246,7 @@ class UserQuery {
 
       // user detail
       await db.query(
-        "insert into User_Detailstbl(user_id,name,point,total_order_amount, nickname) value(?,?,0,0,?)",
+        "insert into User_Detailstbl(user_id,name, nickname) value(?,?,?)",
         [insertId, nickname, nickname]
       );
 
@@ -260,12 +265,12 @@ class UserQuery {
     }
   }
 
-  public async termsIsRequiredSocial(userId: number): Promise<void> {
-    let terms_register_query: string = `INSERT INTO user_termtbl (term_id,is_agree,user_id) VALUES`;
+  public async termsIsRequiredSocial(userId:number) :Promise<void>{
+    let terms_register_query:string = `INSERT INTO user_termtbl (term_id,is_agree,user_id) VALUES`;
     // 필수 약관만 뽑아오기
-    const term_result: Terms[] = await db
+    const term_result:Terms[] = await db
       .query("select term_id from Termstbl")
-      .then((data: any) => {
+      .then((data:any) => {
         return data[0];
       });
     //약관동의별 insert 쿼리문 추가
@@ -279,8 +284,9 @@ class UserQuery {
   }
 
   //
-  public async updateUserRole(id: string, role: Role): Promise<void> {
-    await db.query("update userstbl set role=? where id=?", [role, id]);
+
+  public async updateUserRole(id:number, role:Role):Promise<void> {
+    await db.query("update userstbl set role=? where user_id=?", [role, id])
   }
 
   //
@@ -299,8 +305,9 @@ class UserQuery {
   public async findAllUserAddress(id: string): Promise<Address[]> {
     return db
       .query("select * from addresstbl where user_id=?", [id])
-      .then((data: any) => {
-        return data[0][0];
+
+      .then((data:any) => {
+        return data[0];
       });
   }
   //
@@ -326,12 +333,15 @@ class UserQuery {
       // 기본 배송지 찾기
       const exDefaultId: number = await db.query(
         "select address_id from addresstbl where user_id=? and status=1",
-        [user_id]
-      );
+        [user_id])
+        .then((data:any)=>{
+          return data[0][0].address_id;
+        });
+
       // 일반 배송지로 변경
-      await db.query("update addresstbl set status=0 where address_id=?", [
-        exDefaultId,
-      ]);
+        await db.query("update addresstbl set status=0 where address_id=?", [
+          exDefaultId,
+        ]);
       conn.commit();
     } catch (error) {
       console.log(error);
@@ -349,8 +359,10 @@ class UserQuery {
       // 제일 최근 배송지 찾기
       const exDefaultId: number = await db.query(
         "select address_id from addresstbl where user_id=? and status=0 order by updated_at desc limit 1",
-        [user_id]
-      );
+        [user_id])
+        .then((data:any)=>{
+          return data[0][0].address_id;
+        });
       // 기본 배송지로 변경
       await db.query("update addresstbl set status=1 where address_id=?", [
         exDefaultId,
@@ -364,24 +376,24 @@ class UserQuery {
     }
   }
 
-  public async createUserAddress(address_request: Address): Promise<number> {
+
+  public async createUserAddress(id:string,address_request:Address) :Promise<number>{
     const {
       zip_code,
       address,
       address_detail,
       request_msg,
-      status,
       receiver_name,
       receiver_phone,
     } = address_request;
 
     return db
-      .query("insert into addresstbl values(?,?,?,?,?)", [
+      .query("insert into addresstbl(user_id,zip_code,address,address_detail,request_msg,receiver_name,receiver_phone) value(?,?,?,?,?,?,?)", [
+        id,
         zip_code,
         address,
         address_detail,
         request_msg,
-        status,
         receiver_name,
         receiver_phone,
       ])
@@ -390,24 +402,20 @@ class UserQuery {
       });
   }
   //
-  public async updateUserAddress(
-    id: string,
-    address_request: Address
-  ): Promise<void> {
-    const { zip_code, address, address_detail, request_msg, status } =
+
+  public async updateUserAddress(id:string, address_request:Address) :Promise<void>{
+    const { zip_code, address, address_detail, request_msg, status,receiver_name,receiver_phone } =
       address_request;
 
-    await db.query(
-      "update userstbl set zip_code=?, address=?, address_detail=?, request_msg=?, status=? where user_id=?",
-      [zip_code, address, address_detail, request_msg, status, id]
-    );
+    await db
+      .query(
+        "update Addresstbl set zip_code=?, address=?, address_detail=?, request_msg=?, status=?,receiver_name=?,receiver_phone=? where address_id=?",
+        [zip_code, address, address_detail, request_msg, status,receiver_name,receiver_phone,id]
+      )
   }
   //
-  public async deleteUserAddress(
-    address_id: string,
-    user_id: string
-  ): Promise<void> {
-    await db.query("delete from addresstbl where id=? and user_id=?", [
+  public async deleteUserAddress(address_id:string, user_id:string) :Promise<void>{
+    await db.query("delete from addresstbl where address_id=? and user_id=?", [
       address_id,
       user_id,
     ]);
@@ -424,7 +432,7 @@ class UserQuery {
     term_id: string
   ): Promise<User_Term> {
     return db
-      .query("select * from user_termtbl where user_id=? and term_code=?", [
+      .query("select * from user_termtbl where user_id=? and term_id=?", [
         user_id,
         term_id,
       ])
@@ -456,14 +464,10 @@ class UserQuery {
   //     });
   // }
 
-  public async agreeTerm(
-    id: string,
-    isAgree: boolean,
-    user_id: string
-  ): Promise<void> {
+  public async agreeTerm(id:string, is_agree:boolean, user_id:string) :Promise<void>{
     await db.query(
       "update user_termtbl set is_agree=? where term_id=? and user_id=?",
-      [isAgree, id, user_id]
+      [is_agree, id, user_id]
     );
   }
 }

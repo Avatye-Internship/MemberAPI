@@ -11,8 +11,7 @@ class User_Details{
     profile_img;
     created_at;
     updated_at;
-    constructor(user_detail_id:number,user_id:number,name:string,phone:string,gender:string,birth:string,point:number,total_order_amount:number,nickname:string,profile_img:string,created_at:Date,updated_at:Date
-    )
+    constructor(user_detail_id:number,user_id:number,name:string,phone:string,gender:string,birth:string,point:number,total_order_amount:number,nickname:string,profile_img:string,created_at:Date,updated_at:Date )
     {
         this.user_detail_id=user_detail_id,
         this.name=name,
@@ -26,6 +25,8 @@ class User_Details{
         this.profile_img=profile_img,
         this.created_at=created_at,
         this.updated_at=updated_at
+    }
+    users(){
     }
 }
 

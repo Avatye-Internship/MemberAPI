@@ -43,7 +43,8 @@ export class PassportUserDto {
   users;
   code;
   msg;
-  constructor(users?: Users | null, code?: number | null, msg?: string | null) {
+
+  constructor(users: Users|null, code?: number|null, msg?: string|null) {
     (this.users = users), (this.code = code), (this.msg = msg);
   }
 }

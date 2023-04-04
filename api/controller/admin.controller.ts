@@ -17,6 +17,7 @@ export class AdminController {
       // 로그인 실패시 에러 반환
       if (admin.users?.user_id == null) {
         return res.send(new ResponseDto(admin.code!, admin.msg!));
+
       } else {
         // 로그인 성공시 jwt 토큰 반환
         const jwtToken = await generateJWTToken(

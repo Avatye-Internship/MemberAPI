@@ -187,6 +187,7 @@ const KakaoVerify = async (
     const kakao_account = profileJson.kakao_account;
     // 1. 입력된 이메일로 유저 객체 가져오기
     const exUser: Users = await userQuery.findByEmail(kakao_account.email);
+
     console.log(profileJson);
     // 카카오로 가입 이력이 있는 기존 유저라면
     if (exUser) {
@@ -202,16 +203,17 @@ const KakaoVerify = async (
         );
       }
       done(null, exUser);
+
     } else {
       // 새로 가입
       const newSocial = await userQuery.createSocialUser({
-        login_type: "KAKAO",
+        login_type: 'KAKAO',
         email: kakao_account.email,
         open_id: profileJson.id,
         nickname: kakao_account.profile.nickname,
       });
+      done(null,newSocial);
 
-      done(null, newSocial);
     }
   } catch (error) {
     console.error(error);
@@ -228,6 +230,7 @@ export default function passportfunc() {
     "local-admin",
     new LocalStrategy(passportConfig, AdminLoginVerify)
   );
+
   passport.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
   passport.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
   passport.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
