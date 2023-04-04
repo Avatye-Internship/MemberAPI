@@ -151,7 +151,7 @@ const AdminJWTVerify = async (payload: any, done: any) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
     const user: Users = await userQuery.findById(payload.id);
-    console.log(user);
+
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       // 관리자만 접근 가능
@@ -187,8 +187,6 @@ const KakaoVerify = async (
     const kakao_account = profileJson.kakao_account;
     // 1. 입력된 이메일로 유저 객체 가져오기
     const exUser: Users = await userQuery.findByEmail(kakao_account.email);
-
-    console.log(profileJson);
     // 카카오로 가입 이력이 있는 기존 유저라면
     if (exUser) {
       // 2. 카카오로그인으로 요청했는데 카카오가 아니라 다른걸로 가입된 유저라면
@@ -202,18 +200,16 @@ const KakaoVerify = async (
           )
         );
       }
-      done(null, exUser);
-
+      return done(null, new PassportUserDto(exUser));
     } else {
       // 새로 가입
-      const newSocial = await userQuery.createSocialUser({
-        login_type: 'KAKAO',
+      const newSocial: Users | null = await userQuery.createSocialUser({
+        login_type: "KAKAO",
         email: kakao_account.email,
         open_id: profileJson.id,
         nickname: kakao_account.profile.nickname,
       });
-      done(null,newSocial);
-
+      return done(null, new PassportUserDto(newSocial));
     }
   } catch (error) {
     console.error(error);

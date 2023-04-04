@@ -221,9 +221,7 @@ class UserQuery {
       .then((data: any) => data[0][0]);
   }
 
-  public async createSocialUser(
-    users: SocialLoginDto
-  ): Promise<Users | undefined> {
+  public async createSocialUser(users: SocialLoginDto): Promise<Users> {
     const { login_type, email, open_id, nickname } = users;
 
     const conn: any = await db.getConnection();
@@ -255,11 +253,10 @@ class UserQuery {
 
       const newSocialUser = await this.findById(insertId.toString());
       await conn.commit();
-      console.log(newSocialUser);
       return newSocialUser;
     } catch (error) {
       console.log(error);
-      await conn.rollback();
+      return await conn.rollback();
     } finally {
       conn.release();
     }
