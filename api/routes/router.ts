@@ -5,24 +5,24 @@ import passport from "passport";
 
 const userRouter = express.Router();
 
-const requireUserSignIn = passport.authenticate("local-user", {
+const requireUserSignIn:any = passport.authenticate("local-user", {
   session: false,
 });
 
-const requireAdminSignIn = passport.authenticate("local-admin", {
+const requireAdminSignIn:any = passport.authenticate("local-admin", {
   session: false,
 });
 // 사용자만 접근 가능한 api에 달아주는 passport
-const requireUserAuth = passport.authenticate("jwt-user", {
+const requireUserAuth:any = passport.authenticate("jwt-user", {
   session: false,
 });
 
 // 관리자만 접근 가능한 api에 달아주는 passport
-const requireAdminAuth = passport.authenticate("jwt-admin", {
+const requireAdminAuth:any = passport.authenticate("jwt-admin", {
   session: false,
 });
 
-const requireKakao = passport.authenticate("kakao", { session: false });
+const requireKakao:any = passport.authenticate("kakao", { session: false });
 
 /*
     관리자 API
@@ -91,7 +91,7 @@ userRouter.patch(
 userRouter.patch("/users/find/pwd", userController.updatePwdByDB);
 
 //회원탈퇴
-userRouter.post("/users/account", requireUserAuth, userController.deleteUser);
+userRouter.put("/users/account", requireUserAuth, userController.deleteUser);
 
 // 로그인
 userRouter.post("/users/login/local", requireUserSignIn, userController.signIn);
@@ -108,9 +108,9 @@ userRouter.get(
 userRouter.get("/users", requireUserAuth, userController.getMyDetail);
 // 내 프로필 조회 (이메일, 프로필이미지, 닉네임, 등급, 로그인타입, ..)
 userRouter.get("/users/profile", requireUserAuth, userController.getMyProfile);
-// 닉네임, 프로필 이미지만 조회
+// 닉네임, 프로필 이미지만 조회 
 userRouter.get(
-  "users/basic-info",
+  "/users/basic-info",
   requireUserAuth,
   userController.getMyBasicInfo
 );
@@ -124,17 +124,17 @@ userRouter.post(
 userRouter.get(
   "/users/address",
   requireUserAuth,
-  userController.getMyBasicInfo
+  userController.getUserAddress
 );
 // 내 주소 수정
 userRouter.put(
-  "/users/address",
+  "/users/address/:id",
   requireUserAuth,
   userController.updateUserAddress
 );
 // 내 주소 삭제
 userRouter.delete(
-  "/users/address",
+  "/users/address/:id",
   requireUserAuth,
   userController.deleteUserAddress
 );
@@ -145,8 +145,8 @@ userRouter.patch(
   userController.updateTerm
 );
 // 약관 전체에 대해 사용자 동의 여부 조회
-userRouter.get("/terms", requireUserAuth, userController.getTerms);
+userRouter.get("/users/terms", requireUserAuth, userController.getTerms);
 // 약관 코드별로 사용자 동의 여부 조회
-userRouter.get("/terms/:code", requireUserAuth, userController.getTerm);
+userRouter.get("/users/terms/:id", requireUserAuth, userController.getTerm);
 
 export default userRouter;

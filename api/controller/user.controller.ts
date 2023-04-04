@@ -23,7 +23,7 @@ class UserController {
       // 로그인 실패시 에러 반환
       console.log(req.user);
       if (passportuser.users?.user_id == null) {
-        return res.send(new ResponseDto(passportuser.code, passportuser.msg));
+        return res.send(new ResponseDto(passportuser.code!, passportuser.msg!));
       } else {
         // 로그인 성공시 jwt 토큰 반환
         const jwtToken:string = await generateJWTToken(passportuser.users.user_id, passportuser.users.role);
@@ -41,12 +41,15 @@ class UserController {
   public async socialLogin(req: Request, res: Response, next: any) :Promise<Response>{
     try {
       const passportuser:PassportUserDto = req.user; // socialtbl
+      
       // 로그인 실패시 에러 반환
       if (passportuser.users?.user_id == null) {
-        return res.send(new ResponseDto(passportuser.code, passportuser.msg));
+      
+        return res.send(new ResponseDto(passportuser.code!, passportuser.msg!));
       } else {
         // 로그인 성공시 토큰 반환
         const jwtToken:string = await generateJWTToken(passportuser.users.user_id, passportuser.users.role);
+         
         return res.send(
           new ResponseDto(200, "로그인 성공", { token: jwtToken })
         );
@@ -79,15 +82,17 @@ class UserController {
     try {
       //const user_id:number = req.passportUserDto.id;
       const passportuser:PassportUserDto = req.user;
+      
       if (passportuser.users?.user_id == null) {
         // usertbl
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
 
       // 유저테이블과 조인해서 i/o를 줄이는 쪽으로..
       const userprofile:UserProfileDto = await userQuery.findUserProfileById(passportuser.users.user_id);
+      
       return res.send(new ResponseDto(200, "내 정보 조회 성공", userprofile));
     } catch (err) {
       console.log(err);
@@ -100,9 +105,10 @@ class UserController {
     try {
       //const user_id:number = req.passportUserDto.id; // usertbl
       const passportuser:PassportUserDto = req.user;
+      
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
       // -> 내 권한 확인된 상태 -> 바로 정보만 반환해주면됨
@@ -124,7 +130,7 @@ class UserController {
       if (passportuser.users?.user_id == null) {
         // usertbl
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
 
@@ -141,16 +147,16 @@ class UserController {
   public async updateTerm(req: Request, res: Response, next: any) :Promise<Response>{
     try {
       const term_id:string = req.params.id; // term_id
-      const isAgree:boolean = req.body;
+      const is_agree:boolean = req.body;
       //const user_id:number = req.passportUserDto.id;
       const passportuser:PassportUserDto = req.user;
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
       // -> 내 권한 확인된 상태 -> 바로 정보만 반환해주면됨
-      await userQuery.agreeTerm(term_id, isAgree, passportuser.users.user_id);
+      await userQuery.agreeTerm(term_id, is_agree, passportuser.users.user_id);
       return res.send(new ResponseDto(200, "내 약관 동의 수정 성공"));
     } catch (err) {
       console.log(err);
@@ -167,7 +173,7 @@ class UserController {
       if (passportuser.users?.user_id == null) {
         //usertbl
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
 
@@ -194,18 +200,20 @@ class UserController {
       // 권한 검사
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
-
-      // 기본 배송지로 저장 체크했는지 확인
-      if (address.status == true) {
+      
+      // 주소 리스트 반환
+      const addresslist:Address[] = await userQuery.findAllUserAddress(passportuser.users.user_id);
+      
+      if(addresslist.length){
         // 기존 배송지를 찾아서 일반으로 바꿈
         await userQuery.updateExDefaultAddress(passportuser.users.user_id);
       }
-
       // 주소 삽입
-      const addressId:number = await userQuery.createUserAddress(address);
+      const addressId:number = await userQuery.createUserAddress(passportuser.users.user_id,address);
+      //console.log(addressId);
       return res.send(new ResponseDto(200, "배송지 생성 성공",addressId));
     } catch (error) {
       return res.json(error);
@@ -221,17 +229,21 @@ class UserController {
       const address:Address = req.body;
       // 권한 검사
       if (passportuser.users?.user_id == null) {
-        return res.send(new ResponseDto(passportuser.code, passportuser.msg));
+        return res.send(new ResponseDto(passportuser.code!, passportuser.msg!));
       }
       const isExist:Address = await userQuery.findUserAddressById(address_id, passportuser.users.user_id);
       if (!isExist) {
         return res.send(new ResponseDto(404, "해당 배송지가 없습니다"));
       }
 
-      // 일반배송지 -> 기본배송지
+      // 일반배송지 -> 기본배송지(status=0 -> 1로 변경하는 경우)
       if (address.status == true && isExist.status == false) {
         // 기존 배송지를 찾아서 일반으로 바꿈
         await userQuery.updateExDefaultAddress(passportuser.users.user_id);
+      }else if(address.status==false && isExist.status==true){
+        //status=1 -> 0으로 변경하는 경우 : 제일 최근 수정 배송지를 기본으로 등록
+        console.log(1);
+        await userQuery.updateNewDefaultAddress(passportuser.users.user_id);
       }
 
       // 주소 수정
@@ -251,7 +263,7 @@ class UserController {
 
       // 권한 검사
       if (passportuser.users?.user_id == null) {
-        return res.send(new ResponseDto(passportuser.code, passportuser.msg));
+        return res.send(new ResponseDto(passportuser.code!, passportuser.msg!));
       }
       const isExist:Address = await userQuery.findUserAddressById(address_id, passportuser.users.user_id);
       if (!isExist) {
@@ -279,7 +291,7 @@ class UserController {
       // 권한 검사
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
 
@@ -299,7 +311,7 @@ class UserController {
       // 권한 검사
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
 
@@ -427,13 +439,14 @@ class UserController {
   //내 정보 수정
   public async updateMyUserDetails(req: Request, res: Response, next: any) :Promise<Response>{
     try {
+      
       const userReq:User_Details = req.body;
       const passportuser:PassportUserDto = req.user;
 
       // 권한 검사
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
 
@@ -456,7 +469,7 @@ class UserController {
       // 권한 검사
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
       //console.log(req.passportUserDto);
@@ -514,12 +527,11 @@ class UserController {
   // 회원 탈퇴
   public async deleteUser(req: Request, res: Response, next: any):Promise<Response> {
     try {
-      const reason_text: string = req.body.reason_text;
       const passportuser:PassportUserDto = req.user;
       // 권한 검사
       if (passportuser.users?.user_id == null) {
         return res.send(
-          new ResponseDto(passportuser.code, passportuser.msg)
+          new ResponseDto(passportuser.code!, passportuser.msg!)
         );
       }
       await userQuery.deleteUser(passportuser.users.user_id);
@@ -532,7 +544,7 @@ class UserController {
 }
 // 토큰 만들기
 export const generateJWTToken = async (id: string, role: Role):Promise<string> => {
-  const token:string = jwt.sign({ id, role }, "jwtsecret", {
+  const token:string = jwt.sign({ id, role }, 'SECRET', {
     expiresIn: "3d",
   });
   return token;

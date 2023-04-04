@@ -123,7 +123,7 @@ const UserJWTVerify = async (payload: any, done: any) => {
     const user: Users = await userQuery.findById(payload.id); // usertbl
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
-      return done(null, user);
+      return done(null, new PassportUserDto(user));
     }
     // 유저 데이터가 없다면 에러 표시
     return done(null, { code: 401, msg: "인증되지 않은 회원" });
@@ -180,24 +180,25 @@ const KakaoVerify = async (
     const exUser: Users = await userQuery.findByEmail(kakao_account.email);
 
     // 2. 카카오로그인으로 요청했는데 카카오가 아니라 다른걸로 가입된 유저라면
-    if (exUser.login_type != "KAKAO") {
-      return done(undefined, {
-        code: 400,
-        msg: `${exUser.login_type}로 로그인된 유저입니다. ${exUser.login_type}로 로그인하세요`,
-      });
-    }
+
     // 카카오로 가입 이력이 있는 기존 유저라면
     if (exUser) {
-      done(null, exUser);
+      if (exUser.login_type != 'KAKAO') {
+        return done(undefined, {
+          code: 400,
+          msg: `${exUser.login_type}로 로그인된 유저입니다. ${exUser.login_type}로 로그인하세요`,
+        });
+      }
+      done(null, new PassportUserDto(exUser));
     } else {
       // 새로 가입
       const newSocial = await userQuery.createSocialUser({
-        login_type: "KAKAO",
+        login_type: 'KAKAO',
         email: kakao_account.email,
         open_id: profileJson.id,
         nickname: kakao_account.profile.nickname,
       });
-      done(null, newSocial);
+      done(null,newSocial);
     }
   } catch (error) {
     console.error(error);
@@ -214,6 +215,7 @@ export default function passportfunc() {
     "local-admin",
     new LocalStrategy(passportConfig, AdminLoginVerify)
   );
+
   passport.use("jwt-user", new JWTStrategy(JWTConfig, UserJWTVerify));
   passport.use("jwt-admin", new JWTStrategy(JWTConfig, AdminJWTVerify));
   passport.use("kakao", new KakaoStrategy(KakaoConfig, KakaoVerify));
