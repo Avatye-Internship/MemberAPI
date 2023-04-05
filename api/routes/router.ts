@@ -1,73 +1,73 @@
-import { userController } from "../controller/user.controller";
-import { adminController } from "../controller/admin.controller";
-import express from "express";
-import passport from "passport";
+import express from 'express';
+import passport from 'passport';
+import { adminController } from '../controller/admin.controller';
+import userController from '../controller/user.controller';
 
 const userRouter = express.Router();
 
-const requireUserSignIn:any = passport.authenticate("local-user", {
+const requireUserSignIn:any = passport.authenticate('local-user', {
   session: false,
 });
 
-const requireAdminSignIn:any = passport.authenticate("local-admin", {
+const requireAdminSignIn:any = passport.authenticate('local-admin', {
   session: false,
 });
 // 사용자만 접근 가능한 api에 달아주는 passport
-const requireUserAuth:any = passport.authenticate("jwt-user", {
+const requireUserAuth:any = passport.authenticate('jwt-user', {
   session: false,
 });
 
 // 관리자만 접근 가능한 api에 달아주는 passport
-const requireAdminAuth:any = passport.authenticate("jwt-admin", {
+const requireAdminAuth:any = passport.authenticate('jwt-admin', {
   session: false,
 });
 
-const requireKakao:any = passport.authenticate("kakao", { session: false });
+const requireKakao:any = passport.authenticate('kakao', { session: false });
 
 /*
     관리자 API
   */
 userRouter.post(
-  "/admin/login",
+  '/admin/login',
   requireAdminSignIn,
-  adminController.adminSignIn
+  adminController.adminSignIn,
 );
 
 // 전체 회원 조회 admin
-userRouter.get("/admin/users", requireAdminAuth, adminController.getUsers);
+userRouter.get('/admin/users', requireAdminAuth, adminController.getUsers);
 
 // 회원 계정 조회
 userRouter.get(
-  "/admin/users/account/:id",
+  '/admin/users/account/:id',
   requireAdminAuth,
-  adminController.getUserAccount
+  adminController.getUserAccount,
 );
 // 회원 정보 상세 조회
 userRouter.get(
-  "/admin/users/info/:id",
+  '/admin/users/info/:id',
   requireAdminAuth,
-  adminController.getUserInfo
+  adminController.getUserInfo,
 );
 
 // 회원 권한 수정
 userRouter.patch(
-  "/admin/users/role/:id",
+  '/admin/users/role/:id',
   requireAdminAuth,
-  adminController.updateUserRole
+  adminController.updateUserRole,
 );
 
 /*
     회원 API
   */
 // 회원가입
-userRouter.post("/users", userController.signUp);
+userRouter.post('/users', userController.signUp);
 
-//이메일 유효성 인증 (회원가입 시)
-userRouter.get("/users/check/email", userController.emailValid_signUp);
-//이메일 유효성 인증 (비밀번호 찾기 시)
+// 이메일 유효성 인증 (회원가입 시)
+userRouter.get('/users/check/email', userController.emailValidSignUp);
+// 이메일 유효성 인증 (비밀번호 찾기 시)
 userRouter.get(
-  "/users/check/email-pwd",
-  userController.emailValid_updatePwdByDB
+  '/users/check/email-pwd',
+  userController.emailValidUpdatePwdByDB,
 );
 
 // //이메일 인증코드 확인
@@ -78,75 +78,75 @@ userRouter.get(
 // //내 프로필 수정(Userstbl)
 // userRouter.patch("/users/profile", requireUserAuth, userController.updateMyUsers);
 
-//내 정보 수정(UserDetailstbl)
-userRouter.patch("/users", requireUserAuth, userController.updateMyUserDetails);
+// 내 정보 수정(UserDetailstbl)
+userRouter.patch('/users', requireUserAuth, userController.updateMyUserDetails);
 
-//비밀번호 변경
+// 비밀번호 변경
 userRouter.patch(
-  "/users/change/pwd",
+  '/users/change/pwd',
   requireUserAuth,
-  userController.updatePwdByLogin
+  userController.updatePwdByLogin,
 );
-//비밀번호 찾기
-userRouter.patch("/users/find/pwd", userController.updatePwdByDB);
+// 비밀번호 찾기
+userRouter.patch('/users/find/pwd', userController.updatePwdByDB);
 
-//회원탈퇴
-userRouter.put("/users/account", requireUserAuth, userController.deleteUser);
+// 회원탈퇴
+userRouter.put('/users/account', requireUserAuth, userController.deleteUser);
 
 // 로그인
-userRouter.post("/users/login/local", requireUserSignIn, userController.signIn);
+userRouter.post('/users/login/local', requireUserSignIn, userController.signIn);
 // 소셜로그인 (카카오 엔드포인트, 콜백)
-userRouter.get("/users/login/kakao", requireKakao);
+userRouter.get('/users/login/kakao', requireKakao);
 userRouter.get(
-  "/users/login/kakao/callback",
+  '/users/login/kakao/callback',
   requireKakao,
-  userController.socialLogin
+  userController.socialLogin,
 );
 // 이메일 중복 확인
-//userRouter.post("/users/check/email", userController.checkEmail);
+// userRouter.post("/users/check/email", userController.checkEmail);
 // 내 정보 조회
-userRouter.get("/users", requireUserAuth, userController.getMyDetail);
+userRouter.get('/users', requireUserAuth, userController.getMyDetail);
 // 내 프로필 조회 (이메일, 프로필이미지, 닉네임, 등급, 로그인타입, ..)
-userRouter.get("/users/profile", requireUserAuth, userController.getMyProfile);
-// 닉네임, 프로필 이미지만 조회 
+userRouter.get('/users/profile', requireUserAuth, userController.getMyProfile);
+// 닉네임, 프로필 이미지만 조회
 userRouter.get(
-  "/users/basic-info",
+  '/users/basic-info',
   requireUserAuth,
-  userController.getMyBasicInfo
+  userController.getMyBasicInfo,
 );
 // 내 주소 등록
 userRouter.post(
-  "/users/address",
+  '/users/address',
   requireUserAuth,
-  userController.createUserAddress
+  userController.createUserAddress,
 );
 // 내 주소 조회
 userRouter.get(
-  "/users/address",
+  '/users/address',
   requireUserAuth,
-  userController.getUserAddress
+  userController.getUserAddress,
 );
 // 내 주소 수정
 userRouter.put(
-  "/users/address/:id",
+  '/users/address/:id',
   requireUserAuth,
-  userController.updateUserAddress
+  userController.updateUserAddress,
 );
 // 내 주소 삭제
 userRouter.delete(
-  "/users/address/:id",
+  '/users/address/:id',
   requireUserAuth,
-  userController.deleteUserAddress
+  userController.deleteUserAddress,
 );
 // 약관 동의 (수정)
 userRouter.patch(
-  "/users/terms/:id",
+  '/users/terms/:id',
   requireUserAuth,
-  userController.updateTerm
+  userController.updateTerm,
 );
 // 약관 전체에 대해 사용자 동의 여부 조회
-userRouter.get("/users/terms", requireUserAuth, userController.getTerms);
+userRouter.get('/users/terms', requireUserAuth, userController.getTerms);
 // 약관 코드별로 사용자 동의 여부 조회
-userRouter.get("/users/terms/:id", requireUserAuth, userController.getTerm);
+userRouter.get('/users/terms/:id', requireUserAuth, userController.getTerm);
 
 export default userRouter;
