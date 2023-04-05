@@ -63,7 +63,7 @@ const UserLoginVerify = async (
     return done(null, { code: 400, msg: '올바르지 않은 비밀번호' });
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error });
+    return done(null, new PassportUserDto(null, 401, String(error)));
   }
 };
 
@@ -130,7 +130,7 @@ const UserJWTVerify = async (payload: any, done: any) => {
     return done(null, { code: 401, msg: '인증되지 않은 회원' });
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error });
+    return done(null, new PassportUserDto(null, 401, String(error)));
   }
 };
 
@@ -138,6 +138,7 @@ const AdminJWTVerify = async (payload: any, done: any) => {
   try {
     // payload의 id값으로 유저의 데이터 조회
     const user: Users = await userQuery.findById(payload.id);
+
     // 유저 데이터가 있다면 유저 데이터 객체 전송
     if (user) {
       // 관리자만 접근 가능
@@ -156,7 +157,7 @@ const AdminJWTVerify = async (payload: any, done: any) => {
     });
   } catch (error) {
     console.error(error);
-    return done(null, { code: 401, msg: error });
+    return done(null, new PassportUserDto(null, 401, String(error)));
   }
 };
 

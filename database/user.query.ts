@@ -155,7 +155,10 @@ class UserQuery {
         'select * from userstbl u inner join user_detailstbl ud on u.id = ud.user_id inner join addresstbl ad on ud.user_id = ad.user_id',
         [id],
       )
-      .then((data:any) => data[0][0]);
+      .then((data: any) => {
+        data[0][0];
+        console.log(data[0][0]);
+      });
   }
 
   public async findUserProfileById(id:string) :Promise<UserProfileDto> {
@@ -165,7 +168,7 @@ class UserQuery {
         'select u.user_id, u.user_grade_id,u.email, u.login_type, ud.point, ud.profile_img, ud.nickname from userstbl u inner join user_detailstbl ud on u.user_id = ud.user_id where u.user_id=?',
         [id],
       )
-      .then((data:any) => data[0][0]);
+      .then((data: any) => data[0][0]);
   }
 
   public async createSocialUser(users:SocialLoginDto): Promise<any> {
@@ -364,7 +367,7 @@ class UserQuery {
         user_id,
         term_id,
       ])
-      .then((data:any) => data[0][0]);
+      .then((data: any) => data[0][0]);
   }
 
   public async createTerm(term:Terms) :Promise<number> {
