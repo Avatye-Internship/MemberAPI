@@ -1,6 +1,8 @@
 class ResponseDto {
   statusCode;
+
   message;
+
   data;
 
   constructor(statusCode?:number, message?:string, data?:any) {
