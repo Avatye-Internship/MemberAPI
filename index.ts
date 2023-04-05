@@ -16,3 +16,7 @@ app.use('/api', userRouter);
 app.listen(3000, () => {
   console.log('----server on------');
 });
+
+const termsids = [{ term_id: 4 }, { term_id: 5 }, { term_id: 6 }];
+const termidsinput = termsids.map((term) => term.term_id).join(',');
+console.log(typeof termidsinput);

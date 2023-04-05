@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from 'express';
 import userQuery from '../../database/user.query';
 import ResponseDto from '../model/ResponseDto';
 import PassportUserDto from '../model/PassportUserDto';
+import UserInfoDto from '../model/UserInfoDto';
 
 export class AdminController {
   private admin = new PassportUserDto(null);
@@ -95,7 +96,7 @@ export class AdminController {
       }
 
       // 회원 있으면 반환
-      const user = await userQuery.findUserInfoById(userId);
+      const user : UserInfoDto = await userQuery.findUserInfoById(userId);
       return res.send(new ResponseDto(200, '유저 상세 정보 조회 성공', user));
     } catch (err) {
       console.log(err);

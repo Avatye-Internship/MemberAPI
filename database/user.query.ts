@@ -155,10 +155,7 @@ class UserQuery {
         'select * from userstbl u inner join user_detailstbl ud on u.id = ud.user_id inner join addresstbl ad on ud.user_id = ad.user_id',
         [id],
       )
-      .then((data: any) => {
-        data[0][0];
-        console.log(data[0][0]);
-      });
+      .then((data: any) => data[0][0]);
   }
 
   public async findUserProfileById(id:string) :Promise<UserProfileDto> {
