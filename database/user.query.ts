@@ -87,8 +87,9 @@ class UserQuery {
     id: string,
     users: User_Details,
   ): Promise<void> {
+    const jsonUsers = JSON.stringify(users);
     const sql = 'call update_user_details (?,?)';
-    await this.db.query(sql, [users, id]);
+    await this.db.query(sql, [jsonUsers, id]);
   }
 
   // 비밀번호 변경
@@ -394,7 +395,7 @@ class UserQuery {
 
   // 토큰 만들기
   public async generateJWTToken(id: string, role: Role): Promise<string> {
-    const token: string = jwt.sign({ id, role }, 'SECRET', {
+    const token: string = jwt.sign({ id, role }, 'jwtsecret', {
       expiresIn: this.expiresIn,
     });
     return token;

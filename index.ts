@@ -2,6 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import userRouter from './api/routes/user.router';
 import passportfunc from './api/passport/passport';
+import productRouter from './api/routes/product.router';
 
 // 서버 생성
 const app = express();
@@ -12,6 +13,7 @@ app.use(bodyParser.json());
 passportfunc();
 // 라우터
 app.use('/api', userRouter);
+app.use('/api', productRouter);
 
 app.listen(3000, () => {
   console.log('----server on------');

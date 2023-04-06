@@ -1,3 +1,4 @@
+import ProductResDto from '../api/model/ProductResDto';
 import pool from './pool';
 
 class ProductQuery {
@@ -5,22 +6,22 @@ class ProductQuery {
 
   private db = this.pool.promise();
 
-  public async findProductByCategory(category: string) {
-    try {
-      // const sql = 'select product_id, name, description, product_point,
-      // category,start_date, end_date from Product ';
-      await this.db.query('call ', [category]);
-    } catch (error) {
-      console.log(error);
-    }
+  public async findProductByCategory(userId: string, category: string): Promise<ProductResDto[]> {
+    const sql = 'call select_all_user_product (?,?)';
+    const results: ProductResDto[] = await this.db
+      .query(sql, [userId, category])
+      .then((data: any) => data[0][0]);
+    console.log(results);
+    console.log(results.length);
+    return results;
   }
 
-  public async findProductById(id: string) {
-    try {
-      await this.db.query('call', [id]);
-    } catch (error) {
-      console.log(error);
-    }
+  public async findProductById(productId: string, userId: string)
+    : Promise<ProductResDto> {
+    const sql = 'call select_user_product_by_id (?,?)';
+    const results: ProductResDto = await this.db.query(sql, [productId, userId])
+      .then((data:any) => data[0][0][0]);
+    return results;
   }
 
   public async updatePointByStatus(id: string, product_id: string): Promise<void> {
