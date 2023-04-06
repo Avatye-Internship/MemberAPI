@@ -78,30 +78,7 @@ class UserQuery {
     users: User_Details,
   ): Promise<void> {
     const sql = 'call update_user_details (?,?)';
-    await this.db.query(sql, [id, users]);
-    //     //
-    //     let keyarr = Object.keys(users).toString();
-    //     let valuearr = Object.values(users).toString();
-
-    //     let user_update_query: string = `UPDATE User_Detailstbl SET `;
-
-    //     for (let i: number = 0; i < Object.keys(users).length; i++) {
-    //       user_update_query += `${Object.keys(users)[i]} = '${
-    //  // 내 정보 수정(UserDetailstbl)
-    //  public async updateUserDetails(id:string, users:User_Details):Promise<void> {
-    //   let USER_UPDATE_QUERY = 'UPDATE User_Detailstbl SET ';
-
-    //   // console.log(users.users);
-    //   for (let i = 0; i < Object.keys(users).length; i += 1) {
-    //     USER_UPDATE_QUERY += `${Object.keys(users)[i]} = '${
-    //       Object.values(users)[i]
-    //     }',`;
-    //   }
-    //   USER_UPDATE_QUERY = USER_UPDATE_QUERY.slice(0, -1);
-    //   USER_UPDATE_QUERY += ` WHERE user_id = '${id}';`;
-    //   console.log(USER_UPDATE_QUERY);
-
-    //   this.db.query(USER_UPDATE_QUERY);
+    await this.db.query(sql, [users, id]);
   }
 
   // 비밀번호 변경
@@ -240,6 +217,7 @@ class UserQuery {
     return userTerm;
   }
 
+  // 선택 약관 동의 수정
   public async agreeTerm(
     id: string,
     is_agree: boolean,
