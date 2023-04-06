@@ -1,6 +1,6 @@
 import express from 'express';
 import bodyParser from 'body-parser';
-import userRouter from './api/routes/router';
+import userRouter from './api/routes/user.router';
 import passportfunc from './api/passport/passport';
 
 // 서버 생성

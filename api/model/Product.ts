@@ -26,7 +26,7 @@ class Product {
     start_date: Date,
     end_date: Date,
     created_at: Date,
-    updated_at: Date
+    updated_at: Date,
   ) {
     this.product_id = product_id;
     this.name = name;
@@ -40,6 +40,6 @@ class Product {
   }
 }
 
-export type Category = "all" | "shopping" | "card" | "life" | "join";
+export type Category = 'all' | 'shopping' | 'card' | 'life' | 'join';
 
 export default Product;

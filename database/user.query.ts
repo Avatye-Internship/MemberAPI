@@ -21,6 +21,16 @@ class UserQuery {
 
   private expiresIn = '3d';
 
+  // 등급 수정
+  public async updateGradeByPoint(id: string): Promise<void> {
+    try {
+      const sql = 'call update_user_grade (?)';
+      await this.db.query(sql, [id]);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   // 회원가입
   public async createLocalUser(signupDto: SignUpDto): Promise<number> {
     const {
