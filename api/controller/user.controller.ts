@@ -43,6 +43,27 @@ const transporter:any = nodemailer.createTransport(
   }),
 );
 
+// 등급 수정
+const updateGradeByPoint = async (req: Request, res: Response, next: NextFunction):
+Promise<Response> => {
+  try {
+    const passportuser:PassportUserDto = req.user;
+
+    if (passportuser.users?.user_id == null) {
+      // usertbl
+      return res.send(
+        new ResponseDto(passportuser.code!, passportuser.msg!),
+      );
+    }
+    await userQuery.updateGradeByPoint(passportuser.users.user_id);
+    return res.send(new ResponseDto(200, '등급 수정 성공'));
+  } catch (error) {
+    console.log(error);
+    return res.json(error);
+    next();
+  }
+};
+
 // 로컬 로그인
 // local login passport 실행후 user 반환
 const signIn = async (req: Request, res: Response, next: NextFunction) :Promise<Response> => {
@@ -639,4 +660,5 @@ export default {
   updatePwdByLogin,
   updatePwdByDB,
   deleteUser,
+  updateGradeByPoint,
 };

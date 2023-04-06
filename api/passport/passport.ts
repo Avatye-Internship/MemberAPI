@@ -11,6 +11,25 @@ import PassportUserDto from '../model/PassportUserDto';
 
 dotenv.config();
 
+export const requireUserSignIn:any = passport.authenticate('local-user', {
+  session: false,
+});
+
+export const requireAdminSignIn:any = passport.authenticate('local-admin', {
+  session: false,
+});
+// 사용자만 접근 가능한 api에 달아주는 passport
+export const requireUserAuth:any = passport.authenticate('jwt-user', {
+  session: false,
+});
+
+// 관리자만 접근 가능한 api에 달아주는 passport
+export const requireAdminAuth:any = passport.authenticate('jwt-admin', {
+  session: false,
+});
+
+export const requireKakao:any = passport.authenticate('kakao', { session: false });
+
 // 로그인
 const passportConfig = {
   usernameField: 'email',

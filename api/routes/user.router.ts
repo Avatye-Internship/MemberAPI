@@ -1,28 +1,15 @@
 import express from 'express';
-import passport from 'passport';
 import { adminController } from '../controller/admin.controller';
 import userController from '../controller/user.controller';
+import {
+  requireAdminAuth,
+  requireAdminSignIn,
+  requireKakao,
+  requireUserAuth,
+  requireUserSignIn,
+} from '../passport/passport';
 
 const userRouter = express.Router();
-
-const requireUserSignIn:any = passport.authenticate('local-user', {
-  session: false,
-});
-
-const requireAdminSignIn:any = passport.authenticate('local-admin', {
-  session: false,
-});
-// 사용자만 접근 가능한 api에 달아주는 passport
-const requireUserAuth:any = passport.authenticate('jwt-user', {
-  session: false,
-});
-
-// 관리자만 접근 가능한 api에 달아주는 passport
-const requireAdminAuth:any = passport.authenticate('jwt-admin', {
-  session: false,
-});
-
-const requireKakao:any = passport.authenticate('kakao', { session: false });
 
 /*
     관리자 API
@@ -59,6 +46,9 @@ userRouter.patch(
 /*
     회원 API
   */
+// 등급 수정
+userRouter.patch('/users/point', requireUserAuth, userController.updateGradeByPoint);
+
 // 회원가입
 userRouter.post('/users', userController.signUp);
 
