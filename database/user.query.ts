@@ -107,24 +107,6 @@ class UserQuery {
 
   //   this.db.query(USER_UPDATE_QUERY);
   // }
-  // 약관동의 등록
-  public async termsIsRequired(
-    terms: User_Term[],
-    userId: number
-  ): Promise<void> {
-    let TERMS_REGISTER_QUERY =
-      "INSERT INTO user_termtbl (term_id, is_agree, user_id) VALUES";
-    // 약관동의별 insert 쿼리문 추가
-    for (let i = 0; i < terms.length; i += 1) {
-      // 약관동의 필수 여부에 따른 에러
-      TERMS_REGISTER_QUERY += `('${terms[i].term_id}', '${terms[i].is_agree}', '${userId}'),`;
-    }
-    TERMS_REGISTER_QUERY = `${TERMS_REGISTER_QUERY.substring(
-      0,
-      TERMS_REGISTER_QUERY.length - 1
-    )};`;
-    await this.db.query(TERMS_REGISTER_QUERY);
-  }
 
   //비밀번호 변경
   public async updatePwd(id: string, pwd: string): Promise<void> {
@@ -151,9 +133,11 @@ class UserQuery {
   public async findAllUser(): Promise<Users[]> {
     //call select_all_users
     const sql = "call select_all_users";
+
     const users: Users[] = await this.db
       .query(sql)
       .then((data: any) => data[0][0]);
+
     // const users: Users[] = await this.db
     //   .query("select * from userstbl")
     //   .then((data: any) => data[0]);
@@ -166,9 +150,7 @@ class UserQuery {
     //call select_users_by_id
     const sql = "call select_users_by_id (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0][0]);
-    //   return db
-    //     .query("select * from userstbl where user_id=?", [id])
-    //     .then((data: any) => data[0][0]);
+
   }
 
   // 소셜 객체 찾기
@@ -176,30 +158,21 @@ class UserQuery {
     // call select_social_by_id
     const sql = "call select_social_by_id (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0][0]);
-    // return db
-    //   .query("select * from socialtbl where user_id=?", [id])
-    //   .then((data: any) => data[0][0]);
+
   }
 
   // call select_user_details_by_id
   public async findUserDetailById(id: string): Promise<User_Details> {
     const sql = "call select_user_details_by_id (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0][0]);
-    // return db
-    //   .query("select * from user_detailstbl where user_id=?", [id])
-    //   .then((data: any) => data[0][0]);
+
   }
 
   public async findUserBasicById(id: string): Promise<UserBasicDto> {
     //call select_user_basic_by_id
     const sql = "call select_user_basic_by_id (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0][0]);
-    // return db
-    //   .query(
-    //     "select nickname, profile_img from user_detailstbl where user_id=?",
-    //     [id]
-    //   )
-    //   .then((data: any) => data[0][0]);
+
   }
 
   // user, user_detail, address 모두 조회 후 반환
@@ -207,32 +180,21 @@ class UserQuery {
     //call select_user_all_info_by_id
     const sql = "call select_user_all_info_by_id (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0][0]);
-    // return db
-    //   .query(
-    //     "select * from userstbl u inner join user_detailstbl ud on u.id = ud.user_id inner join addresstbl ad on ud.user_id = ad.user_id",
-    //     [id]
-    //   )
-    //   .then((data: any) => {
-    //     data[0][0];
-    //     console.log(data[0][0]);
-    //   });
+
   }
 
-  public async findUserProfileById(id: string): Promise<UserProfileDto> {
+  // user, user_detail, address 모두 조회 후 반환
+
+  public async findUserProfileById(id:string) :Promise<UserProfileDto> {
     // 등급, 이메일, 로그인타입, 포인트, 프로필이미지, 닉네임
     // call select_users_profile_by_id
     const sql = "call select_users_profile_by_id (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0][0]);
-    // return db
-    //   .query(
-    //     "select u.user_id, u.user_grade_id,u.email, u.login_type, ud.point, ud.profile_img, ud.nickname from userstbl u inner join user_detailstbl ud on u.user_id = ud.user_id where u.user_id=?",
-    //     [id]
-    //   )
-    //   .then((data: any) => data[0][0]);
-  }
 
+  }
   public async createSocialUser(users: SocialLoginDto): Promise<any> {
     const conn: any = await this.db.getConnection();
+
     try {
       await conn.beginTransaction();
       // 가입 정보 넣기
@@ -240,13 +202,16 @@ class UserQuery {
         "SET @user_id = 0; CALL insert_social_users (?,?,?,?, @user_id);  select @user_id;";
 
       const results = await this.db.query(sql, [
+
         users.loginType,
         users.email,
         users.openId,
         users.nickname,
+
       ]);
       // users tbl
       const insertId = Object.values(results[0][2][0]).toString();
+
       const newSocialUser = await this.findById(insertId.toString());
       await conn.commit();
       return newSocialUser;
@@ -259,19 +224,21 @@ class UserQuery {
     }
   }
 
+
+
   public async updateUserRole(id: string, role: Role): Promise<void> {
     // call update_users_role
     const sql = "call update_users_role (?, ?)";
     return await this.db.query(sql, [id, role]);
     // await this.db.query("update userstbl set role=? where user_id=?", [role, id]);
-    //
+
   }
 
   public async findAllUserTerms(id: string): Promise<User_Term> {
     // call select_all_user_terms
     const sql = "call select_all_user_terms (?)";
     return await this.db.query(sql, [id]).then((data: any) => data[0][0]);
-    // return db
+
     //   .query("select * from user_termtbl where user_id=? ", [id])
     //   .then((data: any) => data[0]);
   }
@@ -285,7 +252,7 @@ class UserQuery {
     return await this.db
       .query(sql, [user_id, term_id])
       .then((data: any) => data[0][0][0]);
-    // return db
+    // return this.db
     //   .query("select * from user_termtbl where user_id=? and term_id=?", [
     //     user_id,
     //     term_id,
@@ -311,13 +278,30 @@ class UserQuery {
     //call select_all_address_by_userid
     return this.db
       .query("select * from addresstbl where user_id=?", [id])
+
       .then((data: any) => data[0]);
   }
 
-  public async findUserAddressById(
-    address_id: string,
-    user_id: string
-  ): Promise<Address> {
+
+  // public async findBySocialId(id:number, provider) {
+  //   return this.db
+  //     .query("select * from socialtbl where sns_id=? and provider=?", [
+  //       id,
+  //       login_type,
+  //     ])
+  //     .then((data) => {
+  //       return data[0][0];
+  //     });
+  // }
+  //
+  // public async findAllUserAddress(id:string) :Promise<Address[]> {
+  //   return this.db
+  //     .query('select * from addresstbl where user_id=?', [id])
+  //     .then((data:any) => data[0]);
+  // }
+
+  //
+  public async findUserAddressById(address_id:string, user_id:string) :Promise<Address> {
     return this.db
       .query("select * from addresstbl where address_id=? and user_id=?", [
         address_id,
@@ -447,14 +431,16 @@ class UserQuery {
     );
   }
 
-  public async createTerm(term: Terms): Promise<number> {
+
+  public async createTerm(term:Terms) :Promise<number> {
     const { name, isRequired } = term;
     return this.db
-      .query("insert into termstbl(name,is_required) values(?,?)", [
-        name,
-        isRequired,
-      ])
-      .then((data: any) => data[0].insertId);
+      .query(
+        'insert into termstbl(name,is_required) values(?,?)',
+        [name, isRequired],
+      )
+      .then((data:any) => data[0].insertId);
+
   }
 
   // public async createUserTerm(id:number, termName:string, isAgree:boolean) {
@@ -479,7 +465,7 @@ class UserQuery {
   }
 }
 
-export default new UserQuery();
+export default new UserQuery(); 
 
 // //약관동의 등록
 // public async termsIsRequired(
@@ -502,7 +488,7 @@ export default new UserQuery();
 // }
 
 // public async .findLocalById = async (id) => {
-//   return db
+//   return this.db
 //     .query(
 //       "select id, user_id, email, created_at, role,pwd from localtbl where user_id=?",
 //       [id]
@@ -511,7 +497,7 @@ export default new UserQuery();
 // };
 
 // public async findBySocialId(id:number, provider) {
-//   return db
+//   return this.db
 //     .query("select * from socialtbl where sns_id=? and provider=?", [
 //       id,
 //       login_type,
@@ -523,7 +509,7 @@ export default new UserQuery();
 //
 
 // public async createUserTerm(id:number, termName:string, isAgree:boolean) {
-//   return db
+//   return this.db
 //     .query("insert into userterm(userId, termName, isAgree) values(?,?,?)", [
 //       id,
 //       termName,
@@ -537,7 +523,7 @@ export default new UserQuery();
 
 // //이메일 유효성 검사(인증코드 전송)
 // public async .validByEmail = async (userId) => {
-//   //이메일 인증코드 db에 저장
+//   //이메일 인증코드 this.db에 저장
 //   const verificationCode = generateVerificationCode(); //인증코드 생성
 //   const insertId = await this.db
 //     .query("insert into Emailcodestbl(user_id,verification_code) value(?,?)", [
@@ -570,7 +556,7 @@ export default new UserQuery();
 //내 프로필 수정(Userstbl)
 // public async .updateUser = async (id, user) => {
 //   const { nickname, profile_img } = user;
-//   return db
+//   return this.db
 //     .query("update userstbl set nickname=?, profile_img=? where id=?", [
 //       nickname,
 //       profile_img,
