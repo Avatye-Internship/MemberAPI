@@ -7,8 +7,9 @@ const pool = mysql.createPool({
   user: 'root',
   password: '12345678',
   database: 'shoppingdb',
+  multipleStatements: true,
 });
 
-const db = pool.promise();
+// const db = pool.promise();
 
-export default db;
+export default pool;
