@@ -62,4 +62,8 @@ Promise<Response> => {
   }
 };
 
-export default { updatePointByStatus, findProduct, findProductById };
+export default {
+  updatePointByStatus,
+  findProduct,
+  findProductById,
+};

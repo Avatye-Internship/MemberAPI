@@ -4,7 +4,7 @@ import Address from '../api/model/Address';
 import Social from '../api/model/Social';
 import Terms from '../api/model/Terms';
 import { Users, Role } from '../api/model/Users';
-import User_Details from '../api/model/UserDetails';
+import UserDetails from '../api/model/UserDetails';
 import User_Term from '../api/model/UserTerm';
 
 import SignUpDto from '../api/model/SignUpDto';
@@ -20,6 +20,14 @@ class UserQuery {
   private db = this.pool.promise();
 
   private expiresIn = '3d';
+
+  // 포인트 조회
+  public async findPointById(userId: string): Promise<UserDetails> {
+    const sql = 'call select_user_point (?)';
+    const results: UserDetails = await this.db.query(sql, [userId])
+      .then((data:any) => data[0][0][0]);
+    return results;
+  }
 
   // 등급 수정
   public async updateGradeByPoint(id: string): Promise<void> {
@@ -85,7 +93,7 @@ class UserQuery {
   //   //내 정보 수정(UserDetailstbl)
   public async updateUserDetails(
     id: string,
-    users: User_Details,
+    users: UserDetails,
   ): Promise<void> {
     const jsonUsers = JSON.stringify(users);
     const sql = 'call update_user_details (?,?)';
@@ -139,9 +147,9 @@ class UserQuery {
   }
 
   // call select_user_details_by_id
-  public async findUserDetailById(id: string): Promise<User_Details> {
+  public async findUserDetailById(id: string): Promise<UserDetails> {
     const sql = 'call select_user_details_by_id (?)';
-    const userDetails : User_Details = await this.db.query(sql, [id])
+    const userDetails : UserDetails = await this.db.query(sql, [id])
       .then((data: any) => data[0][0][0]);
 
     return userDetails;

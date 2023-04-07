@@ -46,8 +46,12 @@ userRouter.patch(
 /*
     회원 API
   */
+
 // 등급 수정
-userRouter.patch('/users/point', requireUserAuth, userController.updateGradeByPoint);
+userRouter.get('/users/point', requireUserAuth, userController.findPointById);
+
+// 등급 수정
+userRouter.patch('/users/grade', requireUserAuth, userController.updateGradeByPoint);
 
 // 회원가입
 userRouter.post('/users', userController.signUp);

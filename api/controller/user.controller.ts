@@ -43,6 +43,26 @@ const transporter:any = nodemailer.createTransport(
   }),
 );
 
+// 포인트 조회
+const findPointById = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+): Promise<Response> => {
+  try {
+    const passportUser: PassportUserDto = req.user;
+    if (passportUser.users?.user_id == null) {
+      // usertbl
+      return res.send(new ResponseDto(passportUser.code!, passportUser.msg!));
+    }
+    const result = await userQuery.findPointById(passportUser.users.user_id);
+    return res.send(new ResponseDto(200, '포인트 조회 성공', result));
+  } catch (error) {
+    return res.json(error);
+    next();
+  }
+};
+
 // 등급 수정
 const updateGradeByPoint = async (req: Request, res: Response, next: NextFunction):
 Promise<Response> => {
@@ -661,4 +681,5 @@ export default {
   updatePwdByDB,
   deleteUser,
   updateGradeByPoint,
+  findPointById,
 };
