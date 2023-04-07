@@ -4,13 +4,13 @@ import { requireUserAuth } from '../passport/passport';
 
 const productRouter = express.Router();
 
-productRouter.get('/product', productController.findProduct);
+// 카테고리별 상품 조회
+productRouter.get('/product', requireUserAuth, productController.findProduct);
 
-productRouter.get('/product/:id', productController.findProductById);
+// 상품 id별 조회
+productRouter.get('/product/:id', requireUserAuth, productController.findProductById);
 
 // 참여 상태(status) 수정 및 포인트 적립
 productRouter.patch('/product/ads/:id/user-status', requireUserAuth, productController.updatePointByStatus);
-
-// 등급 수정
 
 export default productRouter;
