@@ -439,7 +439,7 @@ const signUp = async (req: Request, res: Response, next: NextFunction) :Promise<
 
     console.log(userReq);
     // 회원 정보 insert
-    const insertId:number = await userQuery.createLocalUser(userReq);
+    const insertId:string = await userQuery.createLocalUser(userReq);
     return res.send(
       new ResponseDto(201, '회원가입 성공', { id: insertId }),
     );

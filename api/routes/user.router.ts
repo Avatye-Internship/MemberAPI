@@ -47,7 +47,7 @@ userRouter.patch(
     회원 API
   */
 
-// 등급 수정
+// 포인트 조회
 userRouter.get('/users/point', requireUserAuth, userController.findPointById);
 
 // 등급 수정
