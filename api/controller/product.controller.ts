@@ -3,11 +3,11 @@ import productQuery from '../../database/product.query';
 import PassportUserDto from '../model/PassportUserDto';
 import ResponseDto from '../model/ResponseDto';
 
-// 상품 조회
+// 카테고리별 상품 조회
 const findProduct = async (req: Request, res: Response, next: NextFunction): Promise<Response> => {
   try {
     const passportUser: PassportUserDto = req.user;
-    const categoryName = req.params.category;
+    const categoryName = String(req.query.category);
     if (passportUser.users?.user_id == null) {
       // usertbl
       return res.send(new ResponseDto(passportUser.code!, passportUser.msg!));
@@ -21,6 +21,7 @@ const findProduct = async (req: Request, res: Response, next: NextFunction): Pro
   }
 };
 
+// 상품 id별 조회
 const findProductById = async (
   req: Request,
   res: Response,

@@ -40,7 +40,7 @@ class UserQuery {
   }
 
   // 회원가입
-  public async createLocalUser(signupDto: SignUpDto): Promise<number> {
+  public async createLocalUser(signupDto: SignUpDto): Promise<string> {
     const {
       email, pwd, name, gender, birth, nickname, profileImg, terms,
     } = signupDto;
@@ -69,12 +69,11 @@ class UserQuery {
       await this.db.query(termquery, [termsJsonStr, insertId]);
 
       await conn.commit(); // 커밋
-      return parseInt(insertId, 10);
+      return insertId;
     } catch (err) {
       console.log(err);
       await conn.rollback(); // 롤백
-
-      return -1; // 에러
+      throw new Error('회원가입 실패');
     } finally {
       conn.release(); // conn 회수
     }
@@ -97,7 +96,17 @@ class UserQuery {
   ): Promise<void> {
     const jsonUsers = JSON.stringify(users);
     const sql = 'call update_user_details (?,?)';
-    await this.db.query(sql, [jsonUsers, id]);
+    // console.log(users);
+    // this.pool.getConnection((err, con) => {
+    //   if (err) {
+    //     throw err;
+    //   }
+
+    //   const executedQuery = con.query(sql, [jsonUsers, id], () => {});
+    //   console.log(executedQuery);
+    // });
+    await this.db.execute(sql, [jsonUsers, id]);
+    // console.log(JSON.stringify(ver, undefined, 4));
   }
 
   // 비밀번호 변경
