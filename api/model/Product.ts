@@ -9,9 +9,9 @@ class Product {
 
   category;
 
-  start_date;
+  start_at;
 
-  end_date;
+  end_at;
 
   created_at;
 
@@ -23,8 +23,8 @@ class Product {
     description: string,
     product_point: number,
     category: Category,
-    start_date: Date,
-    end_date: Date,
+    start_at: Date,
+    end_at: Date,
     created_at: Date,
     updated_at: Date,
   ) {
@@ -33,8 +33,8 @@ class Product {
     this.description = description;
     this.product_point = product_point;
     this.category = category;
-    this.start_date = start_date;
-    this.end_date = end_date;
+    this.start_at = start_at;
+    this.end_at = end_at;
     this.created_at = created_at;
     this.updated_at = updated_at;
   }

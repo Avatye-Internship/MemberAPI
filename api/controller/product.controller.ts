@@ -35,6 +35,9 @@ const findProductById = async (
       return res.send(new ResponseDto(passportUser.code!, passportUser.msg!));
     }
     const result = await productQuery.findProductById(productId, passportUser.users.user_id);
+    if (!result) {
+      return res.send(new ResponseDto(400, '해당 상품 없음'));
+    }
     return res.send(new ResponseDto(200, '상품 조회 성공', result));
   } catch (error) {
     return res.json(error);

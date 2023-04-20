@@ -86,7 +86,7 @@ Promise<Response> => {
 
 // 로컬 로그인
 // local login passport 실행후 user 반환
-const signIn = async (req: Request, res: Response, next: NextFunction) :Promise<Response> => {
+const signIn = async (req: Request, res: Response, next: NextFunction) :Promise<any> => {
   try {
     const passportuser:PassportUserDto = req.user;
 
@@ -101,9 +101,10 @@ const signIn = async (req: Request, res: Response, next: NextFunction) :Promise<
       passportuser.users.user_id,
       passportuser.users.role,
     );
-    return res.send(
-      new ResponseDto(200, '로그인 성공', { token: jwtToken }),
-    );
+    return res.cookie('accessToken', jwtToken, {
+      httpOnly: true, secure: true, sameSite: 'lax', maxAge: 1000 * 60 * 60 * 24 * 3,
+    })
+      .send(new ResponseDto(200, '로그인 성공'));
   } catch (err) {
     console.log(err);
     return res.send(err);
