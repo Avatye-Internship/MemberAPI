@@ -57,9 +57,9 @@ userRouter.patch('/users/grade', requireUserAuth, userController.updateGradeByPo
 userRouter.post('/users', userController.signUp);
 
 // 이메일 유효성 인증 (회원가입 시)
-userRouter.get('/users/check/email', userController.emailValidSignUp);
+userRouter.post('/users/check/email', userController.emailValidSignUp);
 // 이메일 유효성 인증 (비밀번호 찾기 시)
-userRouter.get(
+userRouter.post(
   '/users/check/email-pwd',
   userController.emailValidUpdatePwdByDB,
 );

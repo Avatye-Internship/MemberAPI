@@ -13,12 +13,15 @@ class ProductResDto {
 
   status;
 
+  main_img;
+
   constructor(
     product_id: number,
     name: string,
     description: string,
     product_point: number,
     category: Category,
+    main_img: string,
     status?: string,
   ) {
     this.product_id = product_id;
@@ -27,6 +30,7 @@ class ProductResDto {
     this.product_point = product_point;
     this.category = category;
     this.status = status;
+    this.main_img = main_img;
   }
 }
 

@@ -8,8 +8,7 @@ class ProductQuery {
 
   public async findProductByCategory(userId: string, category: string): Promise<ProductResDto[]> {
     const sql = 'call select_all_user_product (?,?)';
-    const results: ProductResDto[] = await this.db
-      .query(sql, [userId, category])
+    const results: ProductResDto[] = await this.db.execute(sql, [userId, category])
       .then((data: any) => data[0][0]);
     console.log(results);
     console.log(results.length);
